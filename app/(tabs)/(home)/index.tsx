@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Image,
   Linking,
-  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Car, Clock, Shield, Users, CheckCircle, ArrowRight, Coins } from 'lucide-react-native';
@@ -15,7 +14,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { router } from 'expo-router';
 import { insuranceCompanies } from '@/data/insurance-companies';
-import { supabase } from '@/src/lib/supabaseClient';
 
 // Import local assets
 const ergoLogo = require('@/assets/ERGO-LOGO.png');
@@ -30,80 +28,39 @@ const btaLogo = require('@/assets/BTA-logo.png');
 export default function HomeScreen() {
   const { t } = useLanguage();
 
-  async function testConnection() {
-    try {
-      // Test 1: Try to get current session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-      if (sessionError) {
-        Alert.alert("Connection Error", `Session Error: ${sessionError.message}`);
-        return;
-      }
-
-      // Test 2: Try to create a test user (this will show if auth is working)
-      const testEmail = `test${Date.now()}@example.com`;
-      const testPassword = 'testpassword123';
-
-      const { data, error } = await supabase.auth.signUp({
-        email: testEmail,
-        password: testPassword
-      });
-
-      if (error && error.message !== 'User already registered') {
-        Alert.alert("Auth Test Failed", `Signup Error: ${error.message}`);
-        return;
-      }
-
-      // Test 3: Try to sign in with the test user
-      const { error: signinError } = await supabase.auth.signInWithPassword({
-        email: testEmail,
-        password: testPassword
-      });
-
-      if (signinError) {
-        Alert.alert("Auth Test Failed", `Signin Error: ${signinError.message}`);
-        return;
-      }
-
-      Alert.alert(
-        "✅ Supabase Working!",
-        "Authentication is working correctly!\n\n" +
-        `Session: ${session ? "Active" : "No active session"}\n` +
-        `Test user created: ${testEmail}\n` +
-        "Check your Supabase Dashboard → Authentication → Users"
-      );
-
-    } catch (err) {
-      console.error("Test error:", err);
-      Alert.alert("Test Error", `Error: ${err instanceof Error ? err.message : String(err)}`);
-    }
-  }
-
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <LinearGradient
-        colors={['#059669', '#10B981']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.headerSection}
-      >
-        <SafeAreaView edges={['top']}>
-          <View style={styles.headerContent}>
-            <View style={styles.logoContainer}>
-              <Car size={48} color="#fff" />
-              <Text style={styles.logoText}>{t('companyTitle')}</Text>
+    <View style={styles.container}>
+      {/* Fixed Header */}
+      <View style={styles.headerSection}>
+        <LinearGradient
+          colors={['#059669', '#10B981']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerGradient}
+        >
+          <SafeAreaView edges={['top']}>
+            <View style={styles.headerContent}>
+              <View style={styles.logoContainer}>
+                <Car size={48} color="#fff" />
+                <Text style={styles.logoText}>{t('companyTitle')}</Text>
+              </View>
+              <Text style={styles.headerTitle}>
+                {t('companySubtitle')}
+              </Text>
+              <Text style={styles.headerSubtitle}>
+                {t('heroSubtitle')}
+              </Text>
             </View>
-            <Text style={styles.headerTitle}>
-              {t('companySubtitle')}
-            </Text>
-            <Text style={styles.headerSubtitle}>
-              {t('heroSubtitle')}
-            </Text>
-          </View>
-        </SafeAreaView>
-      </LinearGradient>
+          </SafeAreaView>
+        </LinearGradient>
+      </View>
 
-      <View style={styles.contentSection}>
+      {/* Scrollable Content */}
+      <ScrollView
+        style={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.contentSection}
+      >
         {/* Statistics */}
         <View style={styles.statsSection}>
           <View style={styles.statCard}>
@@ -201,16 +158,6 @@ export default function HomeScreen() {
               <Text style={styles.stepDescription}>{t('step3Desc')}</Text>
             </View>
           </View>
-        </View>
-
-        {/* Supabase Test Section */}
-        <View style={styles.testSection}>
-          <TouchableOpacity
-            style={styles.testButton}
-            onPress={testConnection}
-          >
-            <Text style={styles.testButtonText}>Test Supabase Connection</Text>
-          </TouchableOpacity>
         </View>
 
         {/* Call to Action */}
@@ -337,10 +284,10 @@ export default function HomeScreen() {
           </Text>
         </View>
 
-      </View>
+      </ScrollView>
 
       <View style={styles.bottomSpacing} />
-    </ScrollView>
+    </View>
   );
 }
 
@@ -350,6 +297,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9FAFB',
   },
   headerSection: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1,
+  },
+  headerGradient: {
     paddingBottom: 30,
     borderBottomLeftRadius: 25,
     borderBottomRightRadius: 25,
@@ -358,6 +312,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 20,
     alignItems: 'center',
+  },
+  scrollContainer: {
+    flex: 1,
+    marginTop: 200, // Adjust this to match header height
   },
   logoContainer: {
     flexDirection: 'row',
@@ -504,21 +462,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     lineHeight: 20,
   },
-  testSection: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  testButton: {
-    backgroundColor: '#6B7280',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-  },
-  testButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '500',
-  },
+
   ctaSection: {
     alignItems: 'center',
     marginBottom: 20,

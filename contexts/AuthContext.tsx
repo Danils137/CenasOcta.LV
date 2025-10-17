@@ -189,8 +189,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async () => {
     try {
-      // Sign out from Supabase
-      await supabase.auth.signOut();
+      // Sign out from Supabase (will fail with mock client, but that's expected)
+      try {
+        await supabase.auth.signOut();
+      } catch (error) {
+        console.log('Supabase logout failed as expected (offline mode)');
+      }
 
       // Clear local storage
       await AsyncStorage.removeItem('authToken');
@@ -198,6 +202,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null);
     } catch (error) {
       console.error('Logout error:', error);
+      // Even if there's an error, we should clear the local state
+      await AsyncStorage.removeItem('authToken');
+      await AsyncStorage.removeItem('userData');
+      setUser(null);
     }
   };
 

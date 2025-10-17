@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -23,6 +23,7 @@ interface UserProfileProps {
 
 export default function UserProfile({ onShowLoginModal }: UserProfileProps) {
   const { user, logout, isAuthenticated } = useAuth();
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const handleLogout = async () => {
     Alert.alert(
@@ -37,6 +38,7 @@ export default function UserProfile({ onShowLoginModal }: UserProfileProps) {
           text: 'Logout',
           style: 'destructive',
           onPress: async () => {
+            setShowDropdown(false);
             await logout();
           },
         },
@@ -45,6 +47,7 @@ export default function UserProfile({ onShowLoginModal }: UserProfileProps) {
   };
 
   const handleProfileAction = (action: string) => {
+    setShowDropdown(false);
     // Here you would navigate to different screens based on the action
     Alert.alert('Coming Soon', `${action} feature will be available soon!`);
   };
@@ -64,7 +67,7 @@ export default function UserProfile({ onShowLoginModal }: UserProfileProps) {
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.profileButton}
-        onPress={() => handleProfileAction('Profile')}
+        onPress={() => setShowDropdown(!showDropdown)}
       >
         <View style={styles.userInfo}>
           <View style={styles.avatar}>
@@ -82,60 +85,62 @@ export default function UserProfile({ onShowLoginModal }: UserProfileProps) {
         <ChevronDown size={16} color="#6B7280" />
       </TouchableOpacity>
 
-      {/* Dropdown Menu - For now, we'll show it as a simple list */}
-      <View style={styles.dropdown}>
-        <TouchableOpacity
-          style={styles.dropdownItem}
-          onPress={() => handleProfileAction('Transaction History')}
-        >
-          <History size={18} color="#374151" />
-          <Text style={styles.dropdownItemText}>Transaction History</Text>
-        </TouchableOpacity>
+      {/* Dropdown Menu - Only show when showDropdown is true */}
+      {showDropdown && (
+        <View style={styles.dropdown}>
+          <TouchableOpacity
+            style={styles.dropdownItem}
+            onPress={() => handleProfileAction('Transaction History')}
+          >
+            <History size={18} color="#374151" />
+            <Text style={styles.dropdownItemText}>Transaction History</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.dropdownItem}
-          onPress={() => handleProfileAction('Invoices')}
-        >
-          <Receipt size={18} color="#374151" />
-          <Text style={styles.dropdownItemText}>Invoices</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.dropdownItem}
+            onPress={() => handleProfileAction('Invoices')}
+          >
+            <Receipt size={18} color="#374151" />
+            <Text style={styles.dropdownItemText}>Invoices</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.dropdownItem}
-          onPress={() => handleProfileAction('Insurance Policies')}
-        >
-          <FileText size={18} color="#374151" />
-          <Text style={styles.dropdownItemText}>Insurance Policies</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.dropdownItem}
+            onPress={() => handleProfileAction('Insurance Policies')}
+          >
+            <FileText size={18} color="#374151" />
+            <Text style={styles.dropdownItemText}>Insurance Policies</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.dropdownItem}
-          onPress={() => handleProfileAction('My Dashboard')}
-        >
-          <FileText size={18} color="#374151" />
-          <Text style={styles.dropdownItemText}>My Dashboard</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.dropdownItem}
+            onPress={() => handleProfileAction('My Dashboard')}
+          >
+            <FileText size={18} color="#374151" />
+            <Text style={styles.dropdownItemText}>My Dashboard</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.dropdownItem}
-          onPress={() => handleProfileAction('Settings')}
-        >
-          <Settings size={18} color="#374151" />
-          <Text style={styles.dropdownItemText}>Settings</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.dropdownItem}
+            onPress={() => handleProfileAction('Settings')}
+          >
+            <Settings size={18} color="#374151" />
+            <Text style={styles.dropdownItemText}>Settings</Text>
+          </TouchableOpacity>
 
-        <View style={styles.dropdownDivider} />
+          <View style={styles.dropdownDivider} />
 
-        <TouchableOpacity
-          style={[styles.dropdownItem, styles.logoutItem]}
-          onPress={handleLogout}
-        >
-          <LogOut size={18} color="#EF4444" />
-          <Text style={[styles.dropdownItemText, styles.logoutText]}>
-            Logout
-          </Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            style={[styles.dropdownItem, styles.logoutItem]}
+            onPress={handleLogout}
+          >
+            <LogOut size={18} color="#EF4444" />
+            <Text style={[styles.dropdownItemText, styles.logoutText]}>
+              Logout
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }

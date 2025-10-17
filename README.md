@@ -1,6 +1,6 @@
 # OCTA Insurance Platform
 
-Страховая платформа OCTA с интеграцией Supabase и развертыванием в Vercel.
+Легковесная страховая платформа OCTA для веб (оффлайн режим).
 
 ## 🚀 Быстрый запуск
 
@@ -12,10 +12,10 @@ npm install
 
 # Запуск веб-версии
 npm run web
-
-# Запуск мобильной версии
-npm run ios      # iOS
-npm run android  # Android
+# или
+npm run dev
+# или
+npm start
 ```
 
 ### Деплой в Vercel
@@ -24,13 +24,7 @@ npm run android  # Android
    - Перейдите на [vercel.com](https://vercel.com)
    - Зарегистрируйтесь с GitHub
 
-2. **Настройте переменные окружения в Vercel:**
-   ```
-   EXPO_PUBLIC_SUPABASE_URL=https://ufjcdiyhdbxyylupselm.supabase.co
-   EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-   ```
-
-3. **Загрузите проект:**
+2. **Загрузите проект:**
    ```bash
    # Соберите веб-версию
    npm run export
@@ -42,21 +36,22 @@ npm run android  # Android
 ## 🛠 Архитектура
 
 ```
-┌─────────────────┐    ┌──────────────────┐
-│   Vercel        │    │   Supabase       │
-│   (Frontend)    │◄──►│   (Backend)      │
-│                 │    │                  │
-│ • React/Expo    │    │ • Authentication │
-│ • Static Site   │    │ • Database       │
-│ • CDN           │    │ • Real-time      │
-└─────────────────┘    └──────────────────┘
+┌─────────────────┐
+│   Vercel        │
+│   (Frontend)    │
+│                 │
+│ • React/Expo    │
+│ • Static Site   │
+│ • CDN           │
+│ • Offline Mode  │
+└─────────────────┘
 ```
 
 ## 📁 Структура проекта
 
 ```
-├── src/lib/supabaseClient.js    # Supabase клиент
-├── contexts/AuthContext.tsx     # Аутентификация
+├── src/lib/supabaseClient.js    # Мок-объект Supabase (деактивирован)
+├── contexts/AuthContext.tsx     # Аутентификация (оффлайн)
 ├── components/LoginModal.tsx    # Модальное окно входа
 ├── app/                         # Страницы приложения
 ├── .env.local                   # Локальные переменные
@@ -64,25 +59,20 @@ npm run android  # Android
 └── package.json                 # Зависимости
 ```
 
-## 🔐 Supabase настройки
+## ⚠️ Статус Supabase
 
-Проект уже настроен с правильными ключами Supabase:
-- **URL:** `https://ufjcdiyhdbxyylupselm.supabase.co`
-- **Anon Key:** Настроен в `.env.local`
-
-### Проверка подключения
-
-1. Запустите приложение локально
-2. Нажмите "Test Supabase Connection"
-3. Проверьте в [Supabase Dashboard](https://supabase.com/dashboard/project/ufjcdiyhdbxyylupselm/auth/users)
+Supabase интеграция деактивирована - приложение работает в оффлайн режиме.
+Все переменные окружения Supabase закомментированы в `.env.local`.
 
 ## 🌐 Фичи
 
-- ✅ Аутентификация пользователей через Supabase
-- ✅ Адаптивный дизайн для мобильных и веб
+- ✅ Аутентификация пользователей (оффлайн режим)
+- ✅ Адаптивный веб-дизайн
 - ✅ Многоязычная поддержка
 - ✅ Интеграция с страховыми компаниями
 - ✅ Управление страховыми полисами
+- ✅ Работа без внешних зависимостей
+- ✅ Оптимизировано для веб
 
 ## 🔧 Разработка
 
@@ -91,41 +81,28 @@ npm run android  # Android
 1. **Компоненты:** `components/`
 2. **Страницы:** `app/`
 3. **Стили:** Используйте NativeWind/Tailwind
-4. **API:** Через Supabase клиент
+4. **API:** Мок-объект Supabase (деактивирован)
 
 ### Переменные окружения
 
 ```bash
 # .env.local
-EXPO_PUBLIC_SUPABASE_URL=your-url
-EXPO_PUBLIC_SUPABASE_ANON_KEY=your-key
-```
-
-## 📱 Мобильное приложение
-
-Для сборки мобильного приложения:
-
-```bash
-# Требуется EAS CLI
-npm install -g @expo/eas-cli
-
-# Сборка
-eas build --platform ios
-eas build --platform android
+# SUPABASE DISABLED - все переменные закомментированы
+# EXPO_PUBLIC_SUPABASE_URL=your-url
+# EXPO_PUBLIC_SUPABASE_ANON_KEY=your-key
 ```
 
 ## 🚀 Продакшн
 
 - **Веб-версия:** Развернута в Vercel
-- **Мобильное приложение:** App Store / Google Play
-- **База данных:** Supabase
-- **Аутентификация:** Supabase Auth
+- **Платформа:** Веб-браузеры (десктоп и мобильные)
+- **Режим работы:** Оффлайн (без внешней БД)
+- **Аутентификация:** Деактивирована
 
 ## 🔍 Мониторинг
 
 - **Vercel Dashboard:** Мониторинг веб-приложения
-- **Supabase Dashboard:** Мониторинг базы данных и аутентификации
-- **Логи:** Доступны в консоли браузера и Supabase
+- **Логи:** Доступны в консоли браузера
 
 ---
 

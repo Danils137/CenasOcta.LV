@@ -21,11 +21,11 @@ export default function ContactScreen() {
     {
       id: 'phone',
       title: t('phone'),
-      value: '+371 29 53 53 92',
+      value: '+112',
       description: t('phoneDesc'),
       icon: Phone,
       color: '#1E40AF',
-      action: () => Linking.openURL('tel:+37129535392'),
+      action: () => Linking.openURL('tel:+112'),
     },
     {
       id: 'email',
@@ -52,7 +52,7 @@ export default function ContactScreen() {
       id: 'jaunolaine',
       city: 'Jaunolaine',
       address: 'Miķeļbaudas, Olaines novads, LV-2127',
-      phone: '+371 29 53 53 92',
+      phone: '+112',
       hours: t('hoursRiga'),
     },
   ];
@@ -130,10 +130,10 @@ export default function ContactScreen() {
           </Text>
           <TouchableOpacity
             style={styles.emergencyButton}
-            onPress={() => Linking.openURL('tel:+37129535392')}
+            onPress={() => Linking.openURL('tel:+112')}
           >
             <Phone size={20} color="#fff" />
-            <Text style={styles.emergencyButtonText}>+371 29 53 53 92</Text>
+            <Text style={styles.emergencyButtonText}>+112</Text>
           </TouchableOpacity>
           <Text style={styles.emergencyNote}>
             {t('available24_7')}

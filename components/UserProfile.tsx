@@ -1,0 +1,236 @@
+import React from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from 'react-native';
+import {
+  User as UserIcon,
+  LogOut,
+  Settings,
+  FileText,
+  Receipt,
+  History,
+  ChevronDown
+} from 'lucide-react-native';
+import { useAuth } from '@/contexts/AuthContext';
+
+interface UserProfileProps {
+  onShowLoginModal: () => void;
+}
+
+export default function UserProfile({ onShowLoginModal }: UserProfileProps) {
+  const { user, logout, isAuthenticated } = useAuth();
+
+  const handleLogout = async () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            await logout();
+          },
+        },
+      ]
+    );
+  };
+
+  const handleProfileAction = (action: string) => {
+    // Here you would navigate to different screens based on the action
+    Alert.alert('Coming Soon', `${action} feature will be available soon!`);
+  };
+
+  if (!isAuthenticated || !user) {
+    return (
+      <TouchableOpacity
+        style={styles.loginButton}
+        onPress={onShowLoginModal}
+      >
+        <Text style={styles.loginButtonText}>Login</Text>
+      </TouchableOpacity>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <TouchableOpacity
+        style={styles.profileButton}
+        onPress={() => handleProfileAction('Profile')}
+      >
+        <View style={styles.userInfo}>
+          <View style={styles.avatar}>
+            <UserIcon size={20} color="#1E40AF" />
+          </View>
+          <View style={styles.userDetails}>
+            <Text style={styles.userName} numberOfLines={1}>
+              {user.name}
+            </Text>
+            <Text style={styles.userEmail} numberOfLines={1}>
+              {user.email}
+            </Text>
+          </View>
+        </View>
+        <ChevronDown size={16} color="#6B7280" />
+      </TouchableOpacity>
+
+      {/* Dropdown Menu - For now, we'll show it as a simple list */}
+      <View style={styles.dropdown}>
+        <TouchableOpacity
+          style={styles.dropdownItem}
+          onPress={() => handleProfileAction('Transaction History')}
+        >
+          <History size={18} color="#374151" />
+          <Text style={styles.dropdownItemText}>Transaction History</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.dropdownItem}
+          onPress={() => handleProfileAction('Invoices')}
+        >
+          <Receipt size={18} color="#374151" />
+          <Text style={styles.dropdownItemText}>Invoices</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.dropdownItem}
+          onPress={() => handleProfileAction('Insurance Policies')}
+        >
+          <FileText size={18} color="#374151" />
+          <Text style={styles.dropdownItemText}>Insurance Policies</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.dropdownItem}
+          onPress={() => handleProfileAction('My Dashboard')}
+        >
+          <FileText size={18} color="#374151" />
+          <Text style={styles.dropdownItemText}>My Dashboard</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.dropdownItem}
+          onPress={() => handleProfileAction('Settings')}
+        >
+          <Settings size={18} color="#374151" />
+          <Text style={styles.dropdownItemText}>Settings</Text>
+        </TouchableOpacity>
+
+        <View style={styles.dropdownDivider} />
+
+        <TouchableOpacity
+          style={[styles.dropdownItem, styles.logoutItem]}
+          onPress={handleLogout}
+        >
+          <LogOut size={18} color="#EF4444" />
+          <Text style={[styles.dropdownItemText, styles.logoutText]}>
+            Logout
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    position: 'relative',
+  },
+  loginButton: {
+    backgroundColor: '#1E40AF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginRight: 16,
+  },
+  loginButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  profileButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginRight: 16,
+  },
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  avatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#EBF2FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  userDetails: {
+    flex: 1,
+  },
+  userName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 2,
+  },
+  userEmail: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  dropdown: {
+    position: 'absolute',
+    top: 50,
+    right: 16,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingVertical: 8,
+    minWidth: 200,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    zIndex: 1000,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  dropdownItemText: {
+    fontSize: 14,
+    color: '#374151',
+    marginLeft: 12,
+    flex: 1,
+  },
+  dropdownDivider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginVertical: 4,
+    marginHorizontal: 16,
+  },
+  logoutItem: {
+    marginTop: 4,
+  },
+  logoutText: {
+    color: '#EF4444',
+  },
+});

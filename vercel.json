@@ -16,7 +16,6 @@
     }
   ],
   "env": {
-    "EXPO_PUBLIC_SUPABASE_URL": "@supabase-url",
-    "EXPO_PUBLIC_SUPABASE_ANON_KEY": "@supabase-anon-key"
+    "// SUPABASE DISABLED - All Supabase functionality removed": "//"
   }
 }

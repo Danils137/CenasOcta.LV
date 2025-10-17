@@ -1,31 +1,167 @@
-import { createClient } from '@supabase/supabase-js'
-
-// Используем переменные окружения для Expo/React Native
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
-
-// Логируем переменные для диагностики (уберем в продакшене)
-console.log('Supabase Config Debug:', {
-  url: supabaseUrl ? 'URL exists' : 'URL missing',
-  key: supabaseAnonKey ? 'Key exists' : 'Key missing',
-  urlPrefix: supabaseUrl?.substring(0, 20) + '...',
-  keyPrefix: supabaseAnonKey?.substring(0, 20) + '...'
-})
-
-// Проверяем, что переменные окружения определены
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables:', {
-    url: supabaseUrl,
-    key: supabaseAnonKey
-  })
-  throw new Error('Missing Supabase environment variables')
-}
-
-// Создаем клиент Supabase с дополнительными опциями для отладки
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false
+// Мок-объект Supabase для оффлайн режима
+  export const supabase = {
+    // Auth methods - возвращают ошибки аутентификации
+    auth: {
+      signUp: async () => ({ data: { user: null, session: null }, error: { message: 'Supabase is disabled' } }),
+      signInWithPassword: async () => ({ data: { user: null, session: null }, error: { message: 'Supabase is disabled' } }),
+      signOut: async () => ({ error: null }),
+      getSession: async () => ({ data: { session: null }, error: null }),
+      getUser: async () => ({ data: { user: null }, error: { message: 'Supabase is disabled' } }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      updateUser: async () => ({ data: { user: null }, error: { message: 'Supabase is disabled' } }),
+      resetPasswordForEmail: async () => ({ error: { message: 'Supabase is disabled' } }),
+      verifyOtp: async () => ({ data: { user: null, session: null }, error: { message: 'Supabase is disabled' } }),
+      signInWithOtp: async () => ({ data: { user: null, session: null }, error: { message: 'Supabase is disabled' } }),
+      resend: async () => ({ error: { message: 'Supabase is disabled' } }),
+      exchangeCodeForSession: async () => ({ data: { user: null, session: null }, error: { message: 'Supabase is disabled' } }),
+      signInAnonymously: async () => ({ data: { user: null, session: null }, error: { message: 'Supabase is disabled' } }),
+      signInWithOAuth: async () => ({ data: { provider: null, url: null }, error: { message: 'Supabase is disabled' } }),
+      signInWithIdToken: async () => ({ data: { user: null, session: null }, error: { message: 'Supabase is disabled' } }),
+      signInWithSSO: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+      reauthenticate: async () => ({ data: { user: null, session: null }, error: { message: 'Supabase is disabled' } }),
+      getUserIdentities: async () => ({ data: { identities: [] }, error: null }),
+      linkIdentity: async () => ({ data: { provider: null, url: null }, error: { message: 'Supabase is disabled' } }),
+      unlinkIdentity: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+      setSession: async () => ({ data: { user: null, session: null }, error: { message: 'Supabase is disabled' } }),
+      refreshSession: async () => ({ data: { user: null, session: null }, error: { message: 'Supabase is disabled' } }),
+      startAutoRefresh: () => {},
+      stopAutoRefresh: () => {},
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      // MFA methods
+      mfa: {
+        enroll: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+        verify: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+        unenroll: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+        challenge: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+        listFactors: async () => ({ data: { all: [], totp: [], phone: [] }, error: null }),
+        challengeAndVerify: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+        getAuthenticatorAssuranceLevel: async () => ({ data: { currentLevel: null, nextLevel: null, currentAuthenticationMethods: [] }, error: null })
+      }
+    },
+    // Database methods - возвращают пустые результаты
+    from: () => ({
+      select: () => ({ data: [], error: null }),
+      insert: () => ({ data: null, error: null }),
+      update: () => ({ data: null, error: null }),
+      delete: () => ({ data: null, error: null }),
+      upsert: () => ({ data: null, error: null }),
+      eq: function() { return this },
+      neq: function() { return this },
+      gt: function() { return this },
+      gte: function() { return this },
+      lt: function() { return this },
+      lte: function() { return this },
+      like: function() { return this },
+      ilike: function() { return this },
+      is: function() { return this },
+      in: function() { return this },
+      contains: function() { return this },
+      containedBy: function() { return this },
+      rangeLt: function() { return this },
+      rangeGt: function() { return this },
+      rangeGte: function() { return this },
+      rangeLte: function() { return this },
+      rangeAdjacent: function() { return this },
+      overlaps: function() { return this },
+      textSearch: function() { return this },
+      match: function() { return this },
+      not: function() { return this },
+      or: function() { return this },
+      filter: function() { return this },
+      order: function() { return this },
+      limit: function() { return this },
+      range: function() { return this },
+      abortSignal: function() { return this },
+      single: function() { return this },
+      maybeSingle: function() { return this },
+      csv: function() { return this },
+      geojson: function() { return this },
+      explain: function() { return this },
+      rollback: function() { return this },
+      returns: function() { return this },
+      then: function(resolve) { resolve({ data: null, error: null }); return this }
+    }),
+    // Storage methods - возвращают ошибки
+    storage: {
+      from: () => ({
+        upload: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+        update: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+        remove: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+        list: async () => ({ data: { files: [] }, error: null }),
+        createSignedUrl: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+        createSignedUrls: async () => ({ data: [], error: null }),
+        download: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+        info: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+        exists: async () => ({ data: false, error: null }),
+        getPublicUrl: () => ({ data: { publicUrl: '' } }),
+        move: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+        copy: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+        uploadToSignedUrl: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+        createSignedUploadUrl: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+        listV2: async () => ({ data: { keys: [] }, error: null })
+      }),
+      listBuckets: async () => ({ data: [], error: null }),
+      getBucket: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+      createBucket: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+      updateBucket: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+      emptyBucket: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+      deleteBucket: async () => ({ data: null, error: { message: 'Supabase is disabled' } })
+    },
+    // Realtime methods - возвращают ошибки
+    channel: () => ({
+      subscribe: async () => ({ error: { message: 'Supabase is disabled' } }),
+      unsubscribe: async () => ({ error: null }),
+      on: () => ({ unsubscribe: () => {} }),
+      send: async () => ({ error: { message: 'Supabase is disabled' } }),
+      track: async () => ({ error: { message: 'Supabase is disabled' } }),
+      untrack: async () => ({ error: null }),
+      presenceState: () => ({}),
+      updateJoinPayload: () => {},
+      teardown: () => {}
+    }),
+    getChannels: () => [],
+    removeChannel: async () => ({ error: null }),
+    removeAllChannels: async () => ({ error: null }),
+    // Functions methods - возвращают ошибки
+    functions: {
+      invoke: async () => ({ data: null, error: { message: 'Supabase is disabled' } })
+    },
+    // RPC methods - возвращают ошибки
+    rpc: () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+    schema: () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+    // Utility methods
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    getSession: async () => ({ data: { session: null }, error: null }),
+    getUser: async () => ({ data: { user: null }, error: null }),
+    signOut: async () => ({ error: null }),
+    signUp: async () => ({ data: { user: null, session: null }, error: { message: 'Supabase is disabled' } }),
+    signInWithPassword: async () => ({ data: { user: null, session: null }, error: { message: 'Supabase is disabled' } }),
+    signInWithOAuth: async () => ({ data: { provider: null, url: null }, error: { message: 'Supabase is disabled' } }),
+    updateUser: async () => ({ data: { user: null }, error: { message: 'Supabase is disabled' } }),
+    resetPasswordForEmail: async () => ({ error: { message: 'Supabase is disabled' } }),
+    verifyOtp: async () => ({ data: { user: null, session: null }, error: { message: 'Supabase is disabled' } }),
+    signInWithOtp: async () => ({ data: { user: null, session: null }, error: { message: 'Supabase is disabled' } }),
+    resend: async () => ({ error: { message: 'Supabase is disabled' } }),
+    exchangeCodeForSession: async () => ({ data: { user: null, session: null }, error: { message: 'Supabase is disabled' } }),
+    signInAnonymously: async () => ({ data: { user: null, session: null }, error: { message: 'Supabase is disabled' } }),
+    signInWithIdToken: async () => ({ data: { user: null, session: null }, error: { message: 'Supabase is disabled' } }),
+    signInWithSSO: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+    reauthenticate: async () => ({ data: { user: null, session: null }, error: { message: 'Supabase is disabled' } }),
+    getUserIdentities: async () => ({ data: { identities: [] }, error: null }),
+    linkIdentity: async () => ({ data: { provider: null, url: null }, error: { message: 'Supabase is disabled' } }),
+    unlinkIdentity: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+    setSession: async () => ({ data: { user: null, session: null }, error: { message: 'Supabase is disabled' } }),
+    refreshSession: async () => ({ data: { user: null, session: null }, error: { message: 'Supabase is disabled' } }),
+    startAutoRefresh: () => {},
+    stopAutoRefresh: () => {},
+    // MFA methods
+    mfa: {
+      enroll: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+      verify: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+      unenroll: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+      challenge: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+      listFactors: async () => ({ data: { all: [], totp: [], phone: [] }, error: null }),
+      challengeAndVerify: async () => ({ data: null, error: { message: 'Supabase is disabled' } }),
+      getAuthenticatorAssuranceLevel: async () => ({ data: { currentLevel: null, nextLevel: null, currentAuthenticationMethods: [] }, error: null })
+    }
   }
-})

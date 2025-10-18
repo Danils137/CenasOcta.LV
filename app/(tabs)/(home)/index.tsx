@@ -297,11 +297,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9FAFB',
   },
   headerSection: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1,
+    backgroundColor: '#059669',
+    borderBottomLeftRadius: 25,
+    borderBottomRightRadius: 25,
+    paddingBottom: 30,
   },
   headerGradient: {
     paddingBottom: 30,
@@ -315,7 +314,6 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flex: 1,
-    marginTop: 200, // Adjust this to match header height
   },
   logoContainer: {
     flexDirection: 'row',

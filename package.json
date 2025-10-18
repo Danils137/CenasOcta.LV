@@ -7,7 +7,8 @@
     "dev": "expo start --web",
     "web": "expo start --web",
     "build": "expo export:web",
-    "export": "expo export:web"
+    "export": "expo export:web",
+    "vercel-build": "npm install --legacy-peer-deps && npm run build"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
@@ -39,8 +40,8 @@
     "expo-web-browser": "^14.2.0",
     "lucide-react-native": "^0.475.0",
     "nativewind": "^4.1.23",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "react-native": "^0.79.5",
     "react-native-gesture-handler": "~2.24.0",
     "react-native-safe-area-context": "^5.4.0",
@@ -52,7 +53,7 @@
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@expo/ngrok": "^4.1.0",
-    "@types/react": "~18.3.12",
+    "@types/react": "~19.0.10",
     "eslint": "^9.31.0",
     "eslint-config-expo": "^9.2.0",
     "typescript": "~5.8.3"

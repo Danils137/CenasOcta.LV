@@ -3,13 +3,11 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "expo start --web",
+    "start": "expo start",
     "dev": "expo start --web",
     "web": "expo start --web",
-    "build": "expo export:web",
-    "export": "expo export:web",
     "vercel-build": "bash vercel-build.sh",
-    "build:web": "expo export:web"
+    "build": "npx expo export --platform web"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",

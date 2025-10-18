@@ -1,23 +1,7 @@
 {
-  "version": 2,
   "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    }
+    { "src": "package.json", "use": "@vercel/static-build" }
   ],
-
-  "buildCommand": "npm run vercel-build",
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ],
-  "env": {
-    "SUPABASE_KEY": "your_supabase_api_key_here"
-  }
+  "outputDirectory": "dist",
+  "buildCommand": "npm run vercel-build"
 }

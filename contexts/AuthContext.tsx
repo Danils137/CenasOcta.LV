@@ -45,7 +45,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('🔄 Supabase auth state changed:', event, session?.user?.email || 'No user');
         if (event === 'SIGNED_IN' && session?.user) {
+          console.log('✅ User signed in via Supabase:', session.user.email);
           const user = {
             id: session.user.id,
             name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
@@ -55,6 +57,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           await AsyncStorage.setItem('userData', JSON.stringify(user));
           setUser(user);
         } else if (event === 'SIGNED_OUT') {
+          console.log('🚪 User signed out from Supabase');
           await AsyncStorage.removeItem('userData');
           setUser(null);
         }
@@ -96,16 +99,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
     try {
+      console.log('🔐 Attempting login with Supabase...');
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
       if (error) {
+        console.error('❌ Supabase login error:', error.message);
         return { success: false, error: error.message };
       }
 
       if (data.user) {
+        console.log('✅ Supabase login successful for user:', data.user.email);
         const user = {
           id: data.user.id,
           name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'User',
@@ -119,6 +125,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       return { success: false, error: 'Login failed' };
     } catch (error) {
+      console.error('❌ Login network error:', error);
       return { success: false, error: 'Network error. Please try again.' };
     } finally {
       setIsLoading(false);
@@ -128,6 +135,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
     try {
+      console.log('📝 Attempting registration with Supabase...');
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -139,10 +147,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
 
       if (error) {
+        console.error('❌ Supabase registration error:', error.message);
         return { success: false, error: error.message };
       }
 
       if (data.user) {
+        console.log('✅ Supabase registration successful for user:', email);
         const user = {
           id: data.user.id,
           name: name,
@@ -156,6 +166,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       return { success: false, error: 'Registration failed' };
     } catch (error) {
+      console.error('❌ Registration network error:', error);
       return { success: false, error: 'Network error. Please try again.' };
     } finally {
       setIsLoading(false);
@@ -189,11 +200,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async () => {
     try {
-      // Sign out from Supabase (will fail with mock client, but that's expected)
-      try {
-        await supabase.auth.signOut();
-      } catch (error) {
-        console.log('Supabase logout failed as expected (offline mode)');
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Supabase logout error:', error.message);
+      } else {
+        console.log('Successfully signed out from Supabase');
       }
 
       // Clear local storage

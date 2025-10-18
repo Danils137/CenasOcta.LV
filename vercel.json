@@ -16,6 +16,6 @@
     }
   ],
   "env": {
-    "// SUPABASE DISABLED - All Supabase functionality removed": "//"
+    "SUPABASE_KEY": "your_supabase_api_key_here"
   }
 }

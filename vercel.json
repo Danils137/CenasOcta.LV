@@ -9,7 +9,7 @@
       }
     }
   ],
-  "buildCommand": "npm run vercel-build",
+
   "routes": [
     {
       "src": "/(.*)",

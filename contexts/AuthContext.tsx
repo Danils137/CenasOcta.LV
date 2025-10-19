@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import { supabase } from '../src/lib/supabaseClient';
 import { signIn, signUp, signOut, getCurrentUser } from '../src/lib/authService';
 
@@ -16,6 +17,7 @@ interface AuthContextType {
   register: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   refreshUserData: () => Promise<void>;
+  testLogout: () => Promise<{ success: boolean; message?: string; error?: string }>;
   isAuthenticated: boolean;
   token: string | null;
   getToken: () => Promise<string | null>;
@@ -60,7 +62,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser(user);
         } else if (event === 'SIGNED_OUT') {
           console.log('🚪 User signed out from Supabase - clearing local state');
-          await AsyncStorage.multiRemove(['userData', 'authToken']);
+          // Clear with correct Supabase token key
+          const { data: { session } } = await supabase.auth.getSession();
+          let supabaseAuthTokenKey = 'sb-mpkgdqmfgsuddqwsxn-auth-token'; // Use the known key
+
+          if (session) {
+            // Use the known project reference from supabaseClient.js
+            supabaseAuthTokenKey = 'sb-mpkgdqmfgsuddqwsxn-auth-token';
+          }
+
+          await AsyncStorage.multiRemove(['userData', supabaseAuthTokenKey]);
           setUser(null);
         } else if (event === 'TOKEN_REFRESHED') {
           console.log('🔄 Token refreshed for user:', session?.user?.email || 'Unknown');
@@ -185,24 +196,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       console.log('🔄 Starting logout process...');
 
-      // Sign out using authService (this should trigger the auth state listener)
+      // Get current session to determine the correct Supabase token key
+      const { data: { session } } = await supabase.auth.getSession();
+      let supabaseAuthTokenKey = 'authToken'; // Fallback
+
+      if (session) {
+        // Extract project reference from Supabase URL
+        // Using the known URL from supabaseClient.js
+        const projectRef = 'mpkjdqwlsgsuddqswsxn';
+        supabaseAuthTokenKey = `sb-${projectRef}-auth-token`;
+      }
+
+      // Sign out using authService - this will trigger the auth state listener
       await signOut();
       console.log('✅ Supabase sign out successful');
 
-      // Clear local storage immediately to ensure clean state
-      await AsyncStorage.multiRemove(['authToken', 'userData']);
-      console.log('🗑️ Local storage cleared');
+      // Clear local storage with the correct Supabase token key
+      await AsyncStorage.multiRemove([supabaseAuthTokenKey, 'userData']);
+      console.log('🗑️ Local storage cleared with correct keys');
 
-      // Set user state to null immediately
+      // Clear user state immediately for faster UI feedback
       setUser(null);
       console.log('🚪 User state cleared');
 
     } catch (error: any) {
       console.error('❌ Logout error:', error.message);
 
-      // Even if there's an error with Supabase logout, we should still clear local state
+      // If Supabase logout fails, we should still clear local state
+      // This ensures the user can't get stuck in a logged-in state
       try {
-        await AsyncStorage.multiRemove(['authToken', 'userData']);
+        // Try to determine the correct key even in error case
+        const { data: { session } } = await supabase.auth.getSession();
+        let supabaseAuthTokenKey = 'sb-mpkgdqmfgsuddqwsxn-auth-token'; // Use the known key from screenshot
+
+        if (session) {
+          // Use the known project reference from supabaseClient.js
+          supabaseAuthTokenKey = 'sb-mpkgdqmfgsuddqwsxn-auth-token';
+        }
+
+        await AsyncStorage.multiRemove([supabaseAuthTokenKey, 'userData']);
         setUser(null);
         console.log('🗑️ Local state cleared despite Supabase error');
       } catch (storageError) {
@@ -221,6 +253,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Test function to verify logout functionality
+  const testLogout = async () => {
+    try {
+      console.log('🧪 Testing logout functionality...');
+
+      // First, check current auth state
+      const currentUser = await getCurrentUser();
+      console.log('👤 Current user before logout:', currentUser?.email || 'None');
+
+      if (!currentUser) {
+        console.log('ℹ️ No user logged in, logout test complete');
+        return { success: true, message: 'No user was logged in' };
+      }
+
+      // Attempt logout
+      await logout();
+
+      // Check if logout was successful
+      const userAfterLogout = await getCurrentUser();
+      if (userAfterLogout) {
+        console.error('❌ Logout failed - user still logged in:', userAfterLogout.email);
+        return { success: false, error: 'User still logged in after logout' };
+      }
+
+      console.log('✅ Logout test successful - user properly logged out');
+      return { success: true, message: 'Logout working correctly' };
+
+    } catch (error: any) {
+      console.error('❌ Logout test failed:', error.message);
+      return { success: false, error: error.message };
+    }
+  };
+
   const value: AuthContextType = {
     user,
     isLoading,
@@ -228,6 +293,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     logout,
     refreshUserData,
+    testLogout,
     isAuthenticated: !!user,
     token: null, // We'll use getToken() function when needed
     getToken,

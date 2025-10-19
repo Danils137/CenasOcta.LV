@@ -79,8 +79,8 @@ Set up the following in your `.env.local` or in Vercel → Project Settings → 
 
 | Name | Description | Example |
 |------|-------------|---------|
-| `EXPO_PUBLIC_SUPABASE_URL` | Supabase API endpoint | `https://ufjcdiyhdbxyylupselm.supabase.co` |
-| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Supabase public anon key | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` |
+| `EXPO_PUBLIC_SUPABASE_URL` | Supabase API endpoint | `Example` |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Supabase public anon key | `Example` |
 | `VITE_SUPABASE_URL` | (Compatibility variable) | same as above |
 | `VITE_SUPABASE_ANON_KEY` | (Compatibility variable) | same as above |
 

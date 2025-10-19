@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../src/lib/supabaseClient';
+import { signIn, signUp, signOut, getCurrentUser } from '../src/lib/authService';
 
 interface User {
   id: string;
@@ -44,8 +45,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: string, session: any) => {
         console.log('🔄 Supabase auth state changed:', event, session?.user?.email || 'No user');
+
         if (event === 'SIGNED_IN' && session?.user) {
           console.log('✅ User signed in via Supabase:', session.user.email);
           const user = {
@@ -57,9 +59,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           await AsyncStorage.setItem('userData', JSON.stringify(user));
           setUser(user);
         } else if (event === 'SIGNED_OUT') {
-          console.log('🚪 User signed out from Supabase');
-          await AsyncStorage.removeItem('userData');
+          console.log('🚪 User signed out from Supabase - clearing local state');
+          await AsyncStorage.multiRemove(['userData', 'authToken']);
           setUser(null);
+        } else if (event === 'TOKEN_REFRESHED') {
+          console.log('🔄 Token refreshed for user:', session?.user?.email || 'Unknown');
         }
       }
     );
@@ -69,14 +73,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const checkAuthState = async () => {
     try {
-      // Check if there's an existing Supabase session
-      const { data: { session } } = await supabase.auth.getSession();
+      // Check if there's a current user using authService
+      const currentUser = await getCurrentUser();
 
-      if (session?.user) {
+      if (currentUser) {
         const user = {
-          id: session.user.id,
-          name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
-          email: session.user.email || ''
+          id: currentUser.id,
+          name: currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || 'User',
+          email: currentUser.email || ''
         };
 
         await AsyncStorage.setItem('userData', JSON.stringify(user));
@@ -99,19 +103,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
     try {
-      console.log('🔐 Attempting login with Supabase...');
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
-        console.error('❌ Supabase login error:', error.message);
-        return { success: false, error: error.message };
-      }
+      console.log('🔐 Attempting login with authService...');
+      const data = await signIn(email, password);
 
       if (data.user) {
-        console.log('✅ Supabase login successful for user:', data.user.email);
+        console.log('✅ Login successful for user:', data.user.email);
         const user = {
           id: data.user.id,
           name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'User',
@@ -124,9 +120,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       return { success: false, error: 'Login failed' };
-    } catch (error) {
-      console.error('❌ Login network error:', error);
-      return { success: false, error: 'Network error. Please try again.' };
+    } catch (error: any) {
+      console.error('❌ Login error:', error.message);
+      return { success: false, error: error.message || 'Network error. Please try again.' };
     } finally {
       setIsLoading(false);
     }
@@ -135,24 +131,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
     try {
-      console.log('📝 Attempting registration with Supabase...');
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name: name,
-          }
-        }
-      });
-
-      if (error) {
-        console.error('❌ Supabase registration error:', error.message);
-        return { success: false, error: error.message };
-      }
+      console.log('📝 Attempting registration with authService...');
+      const data = await signUp(email, password);
 
       if (data.user) {
-        console.log('✅ Supabase registration successful for user:', email);
+        console.log('✅ Registration successful for user:', email);
         const user = {
           id: data.user.id,
           name: name,
@@ -165,9 +148,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       return { success: false, error: 'Registration failed' };
-    } catch (error) {
-      console.error('❌ Registration network error:', error);
-      return { success: false, error: 'Network error. Please try again.' };
+    } catch (error: any) {
+      console.error('❌ Registration error:', error.message);
+      return { success: false, error: error.message || 'Network error. Please try again.' };
     } finally {
       setIsLoading(false);
     }
@@ -200,24 +183,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async () => {
     try {
-      // Sign out from Supabase
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Supabase logout error:', error.message);
-      } else {
-        console.log('Successfully signed out from Supabase');
-      }
+      console.log('🔄 Starting logout process...');
 
-      // Clear local storage
-      await AsyncStorage.removeItem('authToken');
-      await AsyncStorage.removeItem('userData');
+      // Sign out using authService (this should trigger the auth state listener)
+      await signOut();
+      console.log('✅ Supabase sign out successful');
+
+      // Clear local storage immediately to ensure clean state
+      await AsyncStorage.multiRemove(['authToken', 'userData']);
+      console.log('🗑️ Local storage cleared');
+
+      // Set user state to null immediately
       setUser(null);
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Even if there's an error, we should clear the local state
-      await AsyncStorage.removeItem('authToken');
-      await AsyncStorage.removeItem('userData');
-      setUser(null);
+      console.log('🚪 User state cleared');
+
+    } catch (error: any) {
+      console.error('❌ Logout error:', error.message);
+
+      // Even if there's an error with Supabase logout, we should still clear local state
+      try {
+        await AsyncStorage.multiRemove(['authToken', 'userData']);
+        setUser(null);
+        console.log('🗑️ Local state cleared despite Supabase error');
+      } catch (storageError) {
+        console.error('❌ Failed to clear local storage:', storageError);
+      }
     }
   };
 

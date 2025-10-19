@@ -113,7 +113,7 @@ export default function LoginModal({ visible, onClose }: LoginModalProps) {
       if (result.success) {
         Alert.alert(
           'Registration Successful',
-          'Your account has been created successfully! You are now logged in.',
+          'Your account has been created successfully!\n\nPlease check your email and click the confirmation link to activate your account.',
           [{ text: 'OK', onPress: () => {
             onClose();
             resetForm();

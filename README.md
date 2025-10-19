@@ -1,110 +1,123 @@
-# OCTA Insurance Platform
+# 🚗 CenasOcta.lv — Auto Insurance Comparison Platform
 
-Легковесная страховая платформа OCTA для веб (оффлайн режим).
+CenasOcta.lv is a modern Latvian insurance comparison platform developed by MIĶEĻBAUDAS SIA.
+The platform allows customers to compare OCTA insurance offers, register, manage their policies, and receive cashback for purchases.
 
-## 🚀 Быстрый запуск
+## 🏗️ Project Overview
 
-### Локальная разработка
+CenasOcta.lv simplifies the process of finding and purchasing car insurance in Latvia.
+The system integrates multiple insurance providers through APIs, compares offers, and allows users to buy policies directly online.
 
-```bash
-# Установка зависимостей
-npm install
+## 🌐 Core Idea
 
-# Запуск веб-версии
-npm run web
-# или
-npm run dev
-# или
-npm start
+**"Fast, transparent, and customer-friendly insurance service — with real cashback."**
+
+## 🧩 Main Features
+
+### 👤 User Portal
+
+Registered users can:
+
+- View purchase and insurance history
+- Download and store policies, invoices, and receipts
+- Manage personal or company details
+- Track the status of insurance policies (active / expired / pending payment)
+- Receive renewal reminders and notifications
+- Use the built-in cashback system
+- View and download credit notes for refunds
+- Contact support directly from their account
+
+### 🏢 Admin Panel (MIĶEĻBAUDAS SIA)
+
+Administrators can:
+
+- Manage users and their policies
+- View and export SEPA XML files for cashback or refunds
+- Connect and configure insurance company APIs
+- Access transaction logs and analytics
+- Approve or reject cashback requests
+- Manage system-wide settings and content
+
+## ⚙️ Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| **Frontend** | React, Vite, Tailwind, NativeWind |
+| **Backend** | Supabase (PostgreSQL + Auth + Storage) |
+| **Auth** | Supabase Email/Password (JWT) |
+| **Hosting** | Vercel + Supabase Cloud |
+| **Payments** | Montonio API (planned integration) |
+| **Data Exports** | SEPA XML (manual or automated mode) |
+
+## 🗂️ Folder Structure
+
+```
+CenasOcta.lv/
+│
+├── OCTA/                  # Frontend application (React/Vite)
+│   ├── src/
+│   │   ├── components/    # UI components (Forms, Tables, etc.)
+│   │   ├── pages/         # Main pages (Home, Login, Dashboard)
+│   │   ├── lib/           # API and Supabase client
+│   │   ├── assets/        # Images, icons, and styles
+│   │   └── App.jsx
+│   └── package.json
+│
+├── SERVER/                # Backend logic (Node.js, optional API proxy)
+│   ├── routes/
+│   ├── controllers/
+│   ├── services/
+│   ├── index.js
+│   └── package.json
+│
+└── README.md
 ```
 
-### Деплой в Vercel
+## 🔐 Environment Variables
 
-1. **Создайте аккаунт в Vercel:**
-   - Перейдите на [vercel.com](https://vercel.com)
-   - Зарегистрируйтесь с GitHub
+Set up the following in your `.env.local` or in Vercel → Project Settings → Environment Variables:
 
-2. **Загрузите проект:**
-   ```bash
-   # Соберите веб-версию
-   npm run export
+| Name | Description | Example |
+|------|-------------|---------|
+| `EXPO_PUBLIC_SUPABASE_URL` | Supabase API endpoint | `https://ufjcdiyhdbxyylupselm.supabase.co` |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Supabase public anon key | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` |
+| `VITE_SUPABASE_URL` | (Compatibility variable) | same as above |
+| `VITE_SUPABASE_ANON_KEY` | (Compatibility variable) | same as above |
 
-   # Загрузите в Vercel
-   vercel --prod
-   ```
+## 🚀 Deployment
 
-## 🛠 Архитектура
+### Frontend:
+- Hosted automatically via Vercel
+- Branch → `master` → triggers build & deploy.
 
-```
-┌─────────────────┐
-│   Vercel        │
-│   (Frontend)    │
-│                 │
-│ • React/Expo    │
-│ • Static Site   │
-│ • CDN           │
-│ • Offline Mode  │
-└─────────────────┘
-```
+### Backend (optional):
+- Node.js server hosted on Vercel Functions or external VPS.
 
-## 📁 Структура проекта
+### Database & Auth:
+- Managed by Supabase Cloud
 
-```
-├── src/lib/supabaseClient.js    # Мок-объект Supabase (деактивирован)
-├── contexts/AuthContext.tsx     # Аутентификация (оффлайн)
-├── components/LoginModal.tsx    # Модальное окно входа
-├── app/                         # Страницы приложения
-├── .env.local                   # Локальные переменные
-├── vercel.json                  # Конфигурация Vercel
-└── package.json                 # Зависимости
-```
+## 💳 Payments & Cashback Logic
 
-## ⚠️ Статус Supabase
+1. Client purchases insurance directly through the website (via partner APIs)
+2. MIĶEĻBAUDAS SIA issues an invoice and records transaction
+3. Cashback calculated as difference between insurance base price and sale price
+4. Refunds processed automatically or via SEPA XML batch upload to bank
 
-Supabase интеграция деактивирована - приложение работает в оффлайн режиме.
-Используется мок-объект Supabase для предотвращения ошибок сборки.
-Все переменные окружения Supabase удалены из проекта.
+## 📈 Roadmap
 
-## 🌐 Фичи
+- ✅ Connect Supabase (Database & Auth)
+- ✅ Deploy on Vercel with custom domain
+- 🟡 Implement login & profile dashboard
+- 🟡 Integrate Montonio for payments
+- 🟡 Add insurance provider APIs
+- ⬜ Launch Beta version for testing
+- ⬜ Integrate admin panel & SEPA exports
+- ⬜ Public launch of cenasocta.lv
 
-- ✅ Аутентификация пользователей (оффлайн режим)
-- ✅ Адаптивный веб-дизайн
-- ✅ Многоязычная поддержка
-- ✅ Интеграция с страховыми компаниями
-- ✅ Управление страховыми полисами
-- ✅ Работа без внешних зависимостей
-- ✅ Оптимизировано для веб
+## 🏢 Company Information
 
-## 🔧 Разработка
-
-### Добавление новых фич
-
-1. **Компоненты:** `components/`
-2. **Страницы:** `app/`
-3. **Стили:** Используйте NativeWind/Tailwind
-4. **API:** Мок-объект Supabase (деактивирован)
-
-### Переменные окружения
-
-```bash
-# .env.local
-# SUPABASE DISABLED - интеграция отключена
-# Проект использует мок-объект Supabase для оффлайн режима
-# Все переменные окружения Supabase удалены для избежания ошибок сборки Vercel
-```
-
-## 🚀 Продакшн
-
-- **Веб-версия:** Развернута в Vercel
-- **Платформа:** Веб-браузеры (десктоп и мобильные)
-- **Режим работы:** Оффлайн (без внешней БД)
-- **Аутентификация:** Деактивирована
-
-## 🔍 Мониторинг
-
-- **Vercel Dashboard:** Мониторинг веб-приложения
-- **Логи:** Доступны в консоли браузера
-
----
-
-**Разработано для OCTA страховой платформы** 🎯
+**MIĶEĻBAUDAS SIA**  
+Reg. Nr.: LV40203355985  
+Address: Miķeļbaudas, Olaines novads, Olaines pagasts, Jaunolaine, LV-2127  
+Email: info@cenasocta.lv  
+Website: https://www.cenasocta.lv

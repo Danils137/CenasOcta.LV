@@ -29,38 +29,32 @@ export default function HomeScreen() {
   const { t } = useLanguage();
 
   return (
-    <View style={styles.container}>
-      {/* Fixed Header */}
-      <View style={styles.headerSection}>
-        <LinearGradient
-          colors={['#059669', '#10B981']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.headerGradient}
-        >
-          <SafeAreaView edges={['top']}>
-            <View style={styles.headerContent}>
-              <View style={styles.logoContainer}>
-                <Car size={48} color="#fff" />
-                <Text style={styles.logoText}>{t('companyTitle')}</Text>
-              </View>
-              <Text style={styles.headerTitle}>
-                {t('companySubtitle')}
-              </Text>
-              <Text style={styles.headerSubtitle}>
-                {t('heroSubtitle')}
-              </Text>
-            </View>
-          </SafeAreaView>
-        </LinearGradient>
-      </View>
-
-      {/* Scrollable Content */}
-      <ScrollView
-        style={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.contentSection}
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Header Section - Now scrollable */}
+      <LinearGradient
+        colors={['#059669', '#10B981']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerSection}
       >
+        <SafeAreaView edges={['top']}>
+          <View style={styles.headerContent}>
+            <View style={styles.logoContainer}>
+              <Car size={48} color="#fff" />
+              <Text style={styles.logoText}>{t('companyTitle')}</Text>
+            </View>
+            <Text style={styles.headerTitle}>
+              {t('companySubtitle')}
+            </Text>
+            <Text style={styles.headerSubtitle}>
+              {t('heroSubtitle')}
+            </Text>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
+
+      {/* Content Section */}
+      <View style={styles.contentSection}>
         {/* Statistics */}
         <View style={styles.statsSection}>
           <View style={styles.statCard}>
@@ -284,10 +278,10 @@ export default function HomeScreen() {
           </Text>
         </View>
 
-      </ScrollView>
-
-      <View style={styles.bottomSpacing} />
-    </View>
+        {/* Bottom Spacing */}
+        <View style={styles.bottomSpacing} />
+      </View>
+    </ScrollView>
   );
 }
 

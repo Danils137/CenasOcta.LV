@@ -60,12 +60,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser(user);
         } else if (event === 'SIGNED_OUT') {
           console.log('🚪 User signed out from Supabase - clearing local state');
-          // Clear with correct Supabase token key
-          const projectRef = 'mpkjdqwlsgsuddqswsxn'; // Correct project reference from supabaseClient.js
-          const supabaseAuthTokenKey = `sb-${projectRef}-auth-token`;
-
-          await AsyncStorage.multiRemove(['userData', supabaseAuthTokenKey]);
-          setUser(null);
+          
+          try {
+            // Get all storage keys and remove all Supabase-related keys
+            const allKeys = await AsyncStorage.getAllKeys();
+            const supabaseKeys = allKeys.filter(key => key.startsWith('sb-'));
+            const keysToRemove = [...supabaseKeys, 'userData', 'authToken'];
+            
+            console.log('🗑️ Removing keys:', keysToRemove);
+            await AsyncStorage.multiRemove(keysToRemove);
+            
+            // Clear user state
+            setUser(null);
+            console.log('✅ Local state cleared successfully');
+          } catch (error) {
+            console.error('❌ Error clearing storage on sign out:', error);
+            // Still clear user state even if storage clear fails
+            setUser(null);
+          }
         } else if (event === 'TOKEN_REFRESHED') {
           console.log('🔄 Token refreshed for user:', session?.user?.email || 'Unknown');
         }
@@ -193,50 +205,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const { data: { session } } = await supabase.auth.getSession();
       console.log('🔍 Current session before logout:', session?.user?.email);
 
-      // Get all keys to find Supabase-related keys
-      const allKeys = await AsyncStorage.getAllKeys();
-      console.log('🗝️ All AsyncStorage keys:', allKeys);
-
-      // Find all Supabase-related keys (they start with 'sb-')
-      const supabaseKeys = allKeys.filter(key => key.startsWith('sb-'));
-      console.log('🔑 Supabase keys to remove:', supabaseKeys);
-
-      // Sign out using authService - this should trigger the auth state listener
+      // Sign out using authService - this will trigger the onAuthStateChange listener
+      // which will handle all the cleanup (storage + state)
       await signOut();
-      console.log('✅ Supabase sign out successful');
-
-      // Clear all Supabase keys and user data
-      const keysToRemove = [...supabaseKeys, 'userData'];
-      await AsyncStorage.multiRemove(keysToRemove);
-      console.log('🗑️ Local storage cleared with keys:', keysToRemove);
-
-      // Immediately clear user state for instant UI feedback
-      setUser(null);
-      console.log('🚪 User state cleared');
-
-      // Verify the logout was successful
-      const { data: { session: sessionAfter } } = await supabase.auth.getSession();
-      console.log('🔍 Session after logout:', sessionAfter?.user?.email || 'No session');
-
-      const keysAfter = await AsyncStorage.getAllKeys();
-      console.log('🔍 AsyncStorage keys after logout:', keysAfter);
-
-      console.log('✅ Logout completed successfully');
+      console.log('✅ Supabase sign out called - auth state listener will handle cleanup');
 
     } catch (error: any) {
       console.error('❌ Logout error:', error.message);
 
-      // Even if Supabase logout fails, we should clear local state
+      // If Supabase logout fails, manually trigger cleanup
+      // This is our fallback to ensure the user is always logged out locally
       try {
+        console.log('⚠️ Supabase logout failed, forcing local cleanup...');
+        
         const allKeys = await AsyncStorage.getAllKeys();
         const supabaseKeys = allKeys.filter(key => key.startsWith('sb-'));
         const keysToRemove = [...supabaseKeys, 'userData'];
         
         await AsyncStorage.multiRemove(keysToRemove);
         setUser(null);
-        console.log('🗑️ Local state cleared despite Supabase error');
         
-        console.log('⚠️ Logout completed with Supabase error, but local state cleared');
+        console.log('✅ Local state forcefully cleared');
       } catch (storageError) {
         console.error('❌ Failed to clear local storage:', storageError);
       }

@@ -114,12 +114,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           console.log('🚪 User signed out from Supabase - clearing local state');
 
           try {
-            // Get all storage keys and remove all Supabase-related keys
+            // 🧹 Жесткая очистка localStorage для веб-браузера
+            if (typeof window !== 'undefined' && window.localStorage) {
+              console.log('🧹 Force cleaning localStorage in AuthContext...');
+
+              // Удаляем основные токены Supabase
+              localStorage.removeItem('supabase.auth.token');
+              localStorage.removeItem('sb-auth-token');
+
+              // Удаляем все ключи начинающиеся с 'sb-'
+              Object.keys(localStorage)
+                .filter(key => key.startsWith('sb-'))
+                .forEach(key => {
+                  console.log(`🗑️ Removing localStorage key: ${key}`);
+                  localStorage.removeItem(key);
+                });
+            }
+
+            // Get all storage keys and remove all Supabase-related keys (для React Native)
             const allKeys = await storage.getAllKeys();
             const supabaseKeys = allKeys.filter(key => key.startsWith('sb-') || key.includes('supabase'));
             const keysToRemove = [...supabaseKeys, 'userData', 'authToken'];
 
-            console.log('🗑️ Removing keys:', keysToRemove);
+            console.log('🗑️ Removing storage keys:', keysToRemove);
             await storage.multiRemove(keysToRemove);
 
             // Clear user state
@@ -246,6 +263,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // This is our fallback to ensure the user is always logged out locally
       try {
         console.log('⚠️ Supabase logout failed, forcing local cleanup...');
+
+        // 🧹 Жесткая очистка localStorage для веб-браузера (fallback)
+        if (typeof window !== 'undefined' && window.localStorage) {
+          console.log('🧹 Force cleaning localStorage in fallback...');
+
+          // Удаляем основные токены Supabase
+          localStorage.removeItem('supabase.auth.token');
+          localStorage.removeItem('sb-auth-token');
+
+          // Удаляем все ключи начинающиеся с 'sb-'
+          Object.keys(localStorage)
+            .filter(key => key.startsWith('sb-'))
+            .forEach(key => {
+              console.log(`🗑️ Removing localStorage key: ${key}`);
+              localStorage.removeItem(key);
+            });
+        }
 
         const allKeys = await storage.getAllKeys();
         const supabaseKeys = allKeys.filter(key => key.startsWith('sb-') || key.includes('supabase'));

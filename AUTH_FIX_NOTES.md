@@ -107,40 +107,71 @@ else if (event === 'SIGNED_OUT') {
 2. Убедитесь что `.env.local` содержит правильные ключи
 3. При проблемах используйте консольные логи для диагностики
 
-## Критическое исправление (22.10.2025)
+## 🚨 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ ЖЕСТКОГО LOGOUT (22.10.2025)
 
-### 🚨 Проблема с авторизацией на веб-сайте
+### 🔍 Обнаруженная проблема
 **Симптомы:**
 - Пользователь видит себя как авторизованного на сайте
 - Кнопка "Logout" не работает
 - После logout пользователь остается в системе
+- В localStorage остается ключ `sb-<hash>-auth-token`
 
-**Причина:** AuthContext использовал AsyncStorage (React Native API), который не работает в веб-браузерах. В веб-версии Supabase использует localStorage.
+**Корневая причина:** Supabase иногда не полностью очищает все токены при `signOut()`, особенно в веб-браузере.
 
-**Решение:** Создана универсальная утилита `storage`, которая автоматически выбирает правильный API:
-- **React Native:** AsyncStorage
-- **Web браузер:** localStorage
+### 💪 Решение: Жесткий logout с принудительной очисткой
 
-### 🔧 Измененные файлы:
+#### 1. `src/lib/authService.js` - ОСНОВНОЕ ИСПРАВЛЕНИЕ
+```javascript
+// 🧹 Жесткая очистка localStorage для веб-браузера (дополнительная гарантия)
+if (typeof window !== 'undefined' && window.localStorage) {
+  console.log('🧹 Force cleaning localStorage...');
 
-#### 1. `contexts/AuthContext.tsx` - ГЛАВНОЕ ИСПРАВЛЕНИЕ
-```typescript
-// Утилита для работы с хранилищем (AsyncStorage для RN, localStorage для Web)
-const storage = {
-  async getItem(key: string): Promise<string | null> {
-    if (typeof window === 'undefined') {
-      // React Native
-      return await AsyncStorage.getItem(key);
-    } else {
-      // Web
-      return localStorage.getItem(key);
-    }
-  },
-  // ... остальные методы
-};
+  // Удаляем основные токены Supabase
+  localStorage.removeItem('supabase.auth.token');
+  localStorage.removeItem('sb-auth-token');
+
+  // Удаляем все ключи начинающиеся с 'sb-'
+  Object.keys(localStorage)
+    .filter(key => key.startsWith('sb-'))
+    .forEach(key => {
+      console.log(`🗑️ Removing localStorage key: ${key}`);
+      localStorage.removeItem(key);
+    });
+
+  console.log('✅ localStorage cleaned successfully');
+}
 ```
 
-**Результат:** Теперь logout корректно очищает localStorage в веб-браузере и пользователь выходит из системы.
+#### 2. `contexts/AuthContext.tsx` - ДВОЙНАЯ ГАРАНТИЯ
+Обработчик `SIGNED_OUT` также выполняет жесткую очистку localStorage:
+
+```typescript
+// 🧹 Жесткая очистка localStorage для веб-браузера
+if (typeof window !== 'undefined' && window.localStorage) {
+  console.log('🧹 Force cleaning localStorage in AuthContext...');
+
+  // Удаляем основные токены Supabase
+  localStorage.removeItem('supabase.auth.token');
+  localStorage.removeItem('sb-auth-token');
+
+  // Удаляем все ключи начинающиеся с 'sb-'
+  Object.keys(localStorage)
+    .filter(key => key.startsWith('sb-'))
+    .forEach(key => {
+      console.log(`🗑️ Removing localStorage key: ${key}`);
+      localStorage.removeItem(key);
+    });
+}
+```
+
+### 🔧 Предыдущие исправления (сохранены)
+
+#### Кросс-платформенная поддержка хранилища
+**Проблема:** AuthContext использовал AsyncStorage (React Native API), который не работает в веб-браузерах.
+
+**Решение:** Создана универсальная утилита `storage`:
+- **React Native:** AsyncStorage
+- **Web браузер:** localStorage
 
 #### 2. `src/lib/authService.js` - Улучшена диагностика
 - Обновлена функция `diagnoseAuth()` для проверки обоих типов хранилища
@@ -190,6 +221,34 @@ diagnoseAuth()
 📋 Session status: None
 👤 Current user: None
 💾 Supabase localStorage keys: []
+```
+
+**Если проблема осталась - ручная очистка:**
+```javascript
+// В браузере, DevTools → Console
+// Очистите все Supabase данные вручную
+Object.keys(localStorage).filter(key => key.startsWith('sb-')).forEach(key => {
+  console.log('Removing:', key);
+  localStorage.removeItem(key);
+});
+localStorage.removeItem('userData');
+location.reload();
+```
+
+**Проверка логов при logout:**
+```
+🔄 Starting logout process...
+🔍 Current session before logout: user@example.com
+🔄 Attempting to sign out from Supabase...
+👤 Current session found for user: user@example.com
+✅ Successfully signed out from Supabase
+🧹 Force cleaning localStorage...
+🗑️ Removing localStorage key: sb-mpkjdqwlsgsuddqswsxn-auth-token
+✅ localStorage cleaned successfully
+🚪 User signed out from Supabase - clearing local state
+🧹 Force cleaning localStorage in AuthContext...
+🗑️ Removing localStorage key: sb-mpkjdqwlsgsuddqswsxn-auth-token
+✅ Local state cleared successfully
 ```
 
 ## Связанные файлы

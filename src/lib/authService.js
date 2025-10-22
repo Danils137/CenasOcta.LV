@@ -75,6 +75,25 @@ export async function signOut() {
       throw error
     }
 
+    // 🧹 Жесткая очистка localStorage для веб-браузера (дополнительная гарантия)
+    if (typeof window !== 'undefined' && window.localStorage) {
+      console.log('🧹 Force cleaning localStorage...')
+
+      // Удаляем основные токены Supabase
+      localStorage.removeItem('supabase.auth.token')
+      localStorage.removeItem('sb-auth-token')
+
+      // Удаляем все ключи начинающиеся с 'sb-'
+      Object.keys(localStorage)
+        .filter(key => key.startsWith('sb-'))
+        .forEach(key => {
+          console.log(`🗑️ Removing localStorage key: ${key}`)
+          localStorage.removeItem(key)
+        })
+
+      console.log('✅ localStorage cleaned successfully')
+    }
+
     console.log('✅ Successfully signed out from Supabase')
     return { success: true }
   } catch (error) {

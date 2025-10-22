@@ -22,7 +22,7 @@ import {
 } from 'lucide-react-native';
 
 import { useLanguage } from '@/contexts/LanguageContext';
-import { insuranceCompanies, InsuranceCompany } from '@/data/insurance-companies';
+import { insuranceCompanies, calculateInsurancePrices, InsuranceCompany } from '@/data/insurance-companies';
 
 type Step = 'quote' | 'personal' | 'payment' | 'confirmation';
 
@@ -58,9 +58,21 @@ export default function QuoteScreen() {
   const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState<Step>('quote');
   const [selectedPeriod, setSelectedPeriod] = useState<keyof InsuranceCompany['prices']>(
-    (period as keyof InsuranceCompany['prices']) || 'months12'
+    (period && ['months1', 'months3', 'months6', 'months9', 'months12'].includes(period)
+      ? period as keyof InsuranceCompany['prices']
+      : 'months12')
   );
   const [isCompanyCustomer] = useState<boolean>(customerType === 'business');
+
+  // Log the received parameters for debugging
+  console.log('Quote page params:', {
+    companyId,
+    customerType,
+    carNumber,
+    carYear,
+    period,
+    selectedPeriod
+  });
   
   console.log('Customer type from params:', customerType);
   console.log('Is company customer:', isCompanyCustomer);
@@ -84,7 +96,32 @@ export default function QuoteScreen() {
   });
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const company = insuranceCompanies.find(c => c.id === companyId);
+  // Get calculated companies with proper pricing
+  const calculatedCompanies = calculateInsurancePrices(
+    parseInt(carYear || '2020'),
+    carNumber || '',
+    selectedPeriod,
+    (customerType as 'personal' | 'company') || 'personal'
+  );
+
+  const company = calculatedCompanies.find(c => c.id === companyId) ||
+                  insuranceCompanies.find(c => c.id === companyId);
+
+  // Update calculated companies when period changes
+  const updateCalculatedCompanies = (newPeriod: keyof InsuranceCompany['prices']) => {
+    const updatedCompanies = calculateInsurancePrices(
+      parseInt(carYear || '2020'),
+      carNumber || '',
+      newPeriod,
+      (customerType as 'personal' | 'company') || 'personal'
+    );
+    return updatedCompanies;
+  };
+
+  // Handle period change with price recalculation
+  const handlePeriodChange = (newPeriod: keyof InsuranceCompany['prices']) => {
+    setSelectedPeriod(newPeriod);
+  };
 
   if (!company) {
     return (
@@ -188,7 +225,7 @@ export default function QuoteScreen() {
       </View>
 
       <View style={styles.periodSelector}>
-        <Text style={styles.sectionTitle}>Select Coverage Period</Text>
+        <Text style={styles.sectionTitle}>{t('selectCoveragePeriod')}</Text>
         <View style={styles.periodOptions}>
           {(['months1', 'months3', 'months6', 'months9', 'months12'] as const).map((period) => (
             <TouchableOpacity
@@ -197,7 +234,7 @@ export default function QuoteScreen() {
                 styles.periodOption,
                 selectedPeriod === period && styles.periodOptionActive
               ]}
-              onPress={() => setSelectedPeriod(period)}
+              onPress={() => handlePeriodChange(period)}
             >
               <Text style={[
                 styles.periodOptionText,

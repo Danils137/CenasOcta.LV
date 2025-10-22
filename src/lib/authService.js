@@ -32,6 +32,28 @@ export async function signIn(email, password) {
   return data
 }
 
+// 🔑 Восстановление пароля
+export async function resetPassword(email) {
+  try {
+    console.log('📧 Sending password reset email to:', email)
+
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'your-app://reset-password', // Настройте deep link для вашего приложения
+    })
+
+    if (error) {
+      console.error('❌ Password reset failed:', error.message)
+      throw error
+    }
+
+    console.log('✅ Password reset email sent successfully')
+    return { success: true, data }
+  } catch (error) {
+    console.error('❌ Password reset error:', error)
+    throw error
+  }
+}
+
 // 🚪 Выход из аккаунта
 export async function signOut() {
   try {

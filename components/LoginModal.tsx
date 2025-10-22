@@ -15,13 +15,14 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { X, Eye, EyeOff, Mail, Lock, User, Chrome } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { resetPassword } from '@/src/lib/authService';
 
 interface LoginModalProps {
   visible: boolean;
   onClose: () => void;
 }
 
-type TabType = 'login' | 'register';
+type TabType = 'login' | 'register' | 'forgot-password';
 
 export default function LoginModal({ visible, onClose }: LoginModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>('login');
@@ -78,6 +79,32 @@ export default function LoginModal({ visible, onClose }: LoginModalProps) {
       }
     } catch (error) {
       Alert.alert('Error', 'An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (!validateEmail(loginEmail)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) return;
+
+    setIsLoading(true);
+    try {
+      await resetPassword(loginEmail);
+      Alert.alert(
+        'Email Sent',
+        'Password reset instructions have been sent to your email address. Please check your inbox and follow the link to reset your password.',
+        [{ text: 'OK', onPress: () => setActiveTab('login') }]
+      );
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to send reset email. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -242,7 +269,11 @@ export default function LoginModal({ visible, onClose }: LoginModalProps) {
               </View>
               {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
 
-              <TouchableOpacity style={styles.forgotPasswordButton}>
+              <TouchableOpacity 
+                style={styles.forgotPasswordButton}
+                onPress={() => setActiveTab('forgot-password')}
+                disabled={isLoading}
+              >
                 <Text style={styles.forgotPasswordText}>Forgot password?</Text>
               </TouchableOpacity>
 
@@ -256,6 +287,50 @@ export default function LoginModal({ visible, onClose }: LoginModalProps) {
                 ) : (
                   <Text style={styles.buttonText}>Sign In</Text>
                 )}
+              </TouchableOpacity>
+            </View>
+          ) : activeTab === 'forgot-password' ? (
+            <View style={styles.form}>
+              <Text style={styles.forgotPasswordDescription}>
+                Enter your email address and we'll send you instructions to reset your password.
+              </Text>
+
+              <View style={styles.inputContainer}>
+                <Mail size={20} color="#6B7280" style={styles.inputIcon} />
+                <TextInput
+                  style={[styles.input, errors.email && styles.inputError]}
+                  placeholder="Email"
+                  value={loginEmail}
+                  onChangeText={(text) => {
+                    setLoginEmail(text);
+                    if (errors.email) setErrors({ ...errors, email: '' });
+                  }}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!isLoading}
+                />
+              </View>
+              {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+
+              <TouchableOpacity
+                style={[styles.button, styles.primaryButton]}
+                onPress={handleForgotPassword}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.buttonText}>Send Reset Link</Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.backToLoginButton}
+                onPress={() => setActiveTab('login')}
+                disabled={isLoading}
+              >
+                <Text style={styles.backToLoginText}>Back to Login</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -468,6 +543,21 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   forgotPasswordText: {
+    color: '#1E40AF',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  forgotPasswordDescription: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  backToLoginButton: {
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  backToLoginText: {
     color: '#1E40AF',
     fontSize: 14,
     fontWeight: '500',

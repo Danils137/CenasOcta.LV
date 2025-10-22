@@ -107,8 +107,48 @@ else if (event === 'SIGNED_OUT') {
 2. Убедитесь что `.env.local` содержит правильные ключи
 3. При проблемах используйте консольные логи для диагностики
 
+## Дополнительные улучшения (22.10.2025)
+
+### 1. Удалена устаревшая функция `refreshUserData()`
+**Проблема:** Функция обращалась к несуществующему бэкенду на `localhost:5000` и не использовалась в коде.
+
+**Решение:** Функция полностью удалена из `AuthContext.tsx` для предотвращения потенциальных ошибок.
+
+### 2. Добавлена функция восстановления пароля
+
+**Файл `src/lib/authService.js`:**
+```javascript
+export async function resetPassword(email) {
+  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: 'your-app://reset-password',
+  });
+  
+  if (error) throw error;
+  return { success: true, data };
+}
+```
+
+**Файл `components/LoginModal.tsx`:**
+- Добавлен новый таб 'forgot-password'
+- Реализован UI для ввода email и отправки ссылки восстановления
+- Добавлена кнопка "Back to Login" для возврата
+
+**Использование:**
+```
+1. На форме логина нажать "Forgot password?"
+2. Ввести email адрес
+3. Нажать "Send Reset Link"
+4. Проверить email и перейти по ссылке
+```
+
+### Примечание
+Для полной работы восстановления пароля необходимо:
+1. Настроить deep linking в приложении для обработки `your-app://reset-password`
+2. В Supabase Dashboard настроить Email Templates для Password Recovery
+3. Указать правильный redirect URL в настройках Supabase
+
 ## Связанные файлы
-- `contexts/AuthContext.tsx` - основная логика авторизации
-- `src/lib/authService.js` - Supabase методы
+- `contexts/AuthContext.tsx` - основная логика авторизации (обновлен: удалена refreshUserData)
+- `src/lib/authService.js` - Supabase методы (обновлен: добавлена resetPassword)
 - `components/UserProfile.tsx` - UI компонент logout
-- `components/LoginModal.tsx` - UI логина/регистрации
+- `components/LoginModal.tsx` - UI логина/регистрации (обновлен: добавлен функционал восстановления пароля)

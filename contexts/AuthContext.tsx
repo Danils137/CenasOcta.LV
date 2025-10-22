@@ -15,7 +15,6 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
-  refreshUserData: () => Promise<void>;
   isAuthenticated: boolean;
   token: string | null;
   getToken: () => Promise<string | null>;
@@ -174,29 +173,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
 
 
-  const refreshUserData = async () => {
-    try {
-      const token = await AsyncStorage.getItem('authToken');
-      if (!token) return;
-
-      const response = await fetch('http://localhost:5000/api/users/me', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const userData = await response.json();
-        await AsyncStorage.setItem('userData', JSON.stringify(userData));
-        setUser(userData);
-      }
-    } catch (error) {
-      console.error('Error refreshing user data:', error);
-    }
-  };
-
   const logout = async () => {
     try {
       console.log('🔄 Starting logout process...');
@@ -249,7 +225,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     register,
     logout,
-    refreshUserData,
     isAuthenticated: !!user,
     token: null, // We'll use getToken() function when needed
     getToken,

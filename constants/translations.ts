@@ -243,6 +243,16 @@ export const translations = {
     missionDescription: 'Padarīt OCTA apdrošināšanas izvēli vienkāršu, caurskatāmu un ērtu ikvienam autovadītājam Latvijā.',
     legalInformation: 'Juridiskā informācija',
     legalInformationDesc: 'Mēs darbojamies kā apdrošināšanas aģents, nevis apdrošināšanas brokeris. Piedāvājam apdrošināšanas produktus no partneru sabiedrībām, ar kurām esam noslēguši sadarbības līgumu. Mēs rīkojamies šo sabiedrību vārdā un interesēs. Visi pakalpojumi tiek sniegti saskaņā ar Latvijas Republikas tiesību aktiem un Latvijas Bankas noteikumiem.',
+
+    // User Profile Navigation
+    transactionHistory: 'Darījumu vēsture',
+    invoices: 'Rēķini',
+    insurancePolicies: 'Apdrošināšanas polises',
+    myDashboard: 'Mans panelis',
+    settings: 'Iestatījumi',
+
+    // Quote Screen
+    selectCoveragePeriod: 'Izvēlieties seguma periodu',
   },
   
   en: {
@@ -488,6 +498,16 @@ export const translations = {
     missionDescription: 'To make OCTA insurance choice simple and transparent, providing Latvian drivers with the opportunity to quickly compare prices and find the best offer from all market participants in one place.',
     legalInformation: 'Legal Information',
     legalInformationDesc: 'We operate as an insurance agent, not an insurance broker. We offer insurance products from partner companies with which we have concluded cooperation agreements. We act on behalf of and in the interests of these companies. All services are provided in accordance with the legal acts of the Republic of Latvia and the regulations of the Bank of Latvia.',
+
+    // User Profile Navigation
+    transactionHistory: 'Transaction History',
+    invoices: 'Invoices',
+    insurancePolicies: 'Insurance Policies',
+    myDashboard: 'My Dashboard',
+    settings: 'Settings',
+
+    // Quote Screen
+    selectCoveragePeriod: 'Select Coverage Period',
   },
   
   ru: {
@@ -733,6 +753,16 @@ export const translations = {
     missionDescription: 'Сделать выбор страхования OCTA простым и прозрачным, предоставив латвийским водителям возможность быстро сравнивать цены и находить лучшее предложение от всех участников рынка в одном месте.',
     legalInformation: 'Юридическая информация',
     legalInformationDesc: 'Мы работаем как страховой агент, а не как страховой брокер. Мы предлагаем страховые продукты от партнерских компаний, с которыми у нас заключены договоры о сотрудничестве. Мы действуем от имени и в интересах этих компаний. Все услуги предоставляются в соответствии с правовыми актами Республики Латвия и правилами Банка Латвии.',
+
+    // User Profile Navigation
+    transactionHistory: 'История транзакций',
+    invoices: 'Счета',
+    insurancePolicies: 'Страховые полисы',
+    myDashboard: 'Моя панель',
+    settings: 'Настройки',
+
+    // Quote Screen
+    selectCoveragePeriod: 'Выберите период покрытия',
   },
 };
 

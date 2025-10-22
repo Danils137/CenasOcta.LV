@@ -16,6 +16,7 @@ import {
   ChevronDown
 } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface UserProfileProps {
   onShowLoginModal: () => void;
@@ -23,6 +24,7 @@ interface UserProfileProps {
 
 export default function UserProfile({ onShowLoginModal }: UserProfileProps) {
   const { user, logout, isAuthenticated } = useAuth();
+  const { t } = useLanguage();
   const [showDropdown, setShowDropdown] = useState(false);
 
   const handleLogout = async () => {
@@ -65,6 +67,50 @@ export default function UserProfile({ onShowLoginModal }: UserProfileProps) {
 
   return (
     <View style={styles.container}>
+      {/* Navigation Buttons on Header */}
+      <View style={styles.headerButtons}>
+        <TouchableOpacity
+          style={styles.headerButton}
+          onPress={() => handleProfileAction(t('transactionHistory'))}
+        >
+          <History size={18} color="#fff" />
+          <Text style={styles.headerButtonText}>{t('transactionHistory')}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.headerButton}
+          onPress={() => handleProfileAction(t('invoices'))}
+        >
+          <Receipt size={18} color="#fff" />
+          <Text style={styles.headerButtonText}>{t('invoices')}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.headerButton}
+          onPress={() => handleProfileAction(t('insurancePolicies'))}
+        >
+          <FileText size={18} color="#fff" />
+          <Text style={styles.headerButtonText}>{t('insurancePolicies')}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.headerButton}
+          onPress={() => handleProfileAction(t('myDashboard'))}
+        >
+          <FileText size={18} color="#fff" />
+          <Text style={styles.headerButtonText}>{t('myDashboard')}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.headerButton}
+          onPress={() => handleProfileAction(t('settings'))}
+        >
+          <Settings size={18} color="#fff" />
+          <Text style={styles.headerButtonText}>{t('settings')}</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* User Profile Button */}
       <TouchableOpacity
         style={styles.profileButton}
         onPress={() => setShowDropdown(!showDropdown)}
@@ -77,9 +123,6 @@ export default function UserProfile({ onShowLoginModal }: UserProfileProps) {
             <Text style={styles.userName} numberOfLines={1}>
               {user.name}
             </Text>
-            <Text style={styles.userEmail} numberOfLines={1}>
-              {user.email}
-            </Text>
           </View>
         </View>
         <ChevronDown size={16} color="#6B7280" />
@@ -88,48 +131,6 @@ export default function UserProfile({ onShowLoginModal }: UserProfileProps) {
       {/* Dropdown Menu - Only show when showDropdown is true */}
       {showDropdown && (
         <View style={styles.dropdown}>
-          <TouchableOpacity
-            style={styles.dropdownItem}
-            onPress={() => handleProfileAction('Transaction History')}
-          >
-            <History size={18} color="#374151" />
-            <Text style={styles.dropdownItemText}>Transaction History</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.dropdownItem}
-            onPress={() => handleProfileAction('Invoices')}
-          >
-            <Receipt size={18} color="#374151" />
-            <Text style={styles.dropdownItemText}>Invoices</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.dropdownItem}
-            onPress={() => handleProfileAction('Insurance Policies')}
-          >
-            <FileText size={18} color="#374151" />
-            <Text style={styles.dropdownItemText}>Insurance Policies</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.dropdownItem}
-            onPress={() => handleProfileAction('My Dashboard')}
-          >
-            <FileText size={18} color="#374151" />
-            <Text style={styles.dropdownItemText}>My Dashboard</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.dropdownItem}
-            onPress={() => handleProfileAction('Settings')}
-          >
-            <Settings size={18} color="#374151" />
-            <Text style={styles.dropdownItemText}>Settings</Text>
-          </TouchableOpacity>
-
-          <View style={styles.dropdownDivider} />
-
           <TouchableOpacity
             style={[styles.dropdownItem, styles.logoutItem]}
             onPress={handleLogout}
@@ -160,6 +161,26 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  headerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    marginRight: 8,
+    borderRadius: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  headerButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '500',
+    marginLeft: 4,
   },
   profileButton: {
     flexDirection: 'row',

@@ -7,9 +7,10 @@ import {
   TouchableOpacity,
   TextInput,
   Image,
+  Modal,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Car, Shield, CheckCircle, ArrowRight, Star, User, Building2 } from 'lucide-react-native';
+import { Car, Shield, CheckCircle, ArrowRight, Star, User, Building2, ChevronDown, X } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -23,9 +24,11 @@ export default function InsuranceScreen() {
   const [customerType, setCustomerType] = useState<'private' | 'business'>('private');
   const [carNumber, setCarNumber] = useState<string>('');
   const [carYear, setCarYear] = useState<string>('');
-  const [selectedPeriod, setSelectedPeriod] = useState<keyof InsuranceCompany['prices']>('months12');
   const [showCompanies, setShowCompanies] = useState<boolean>(false);
+  const [showCompaniesDropdown, setShowCompaniesDropdown] = useState<boolean>(false);
   const [calculatedCompanies, setCalculatedCompanies] = useState<InsuranceCompany[]>([]);
+  const [selectedCompany, setSelectedCompany] = useState<InsuranceCompany | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<keyof InsuranceCompany['prices']>('months12');
 
   const insuranceTypes = [
     {
@@ -120,68 +123,7 @@ export default function InsuranceScreen() {
         ))}
       </View>
 
-      {selectedInsurance && (
-        <View style={styles.detailsSection}>
-          <Text style={styles.sectionTitle}>{t('whatsIncluded')}</Text>
-          <View style={styles.featuresList}>
-            {selectedInsurance.features.map((feature, index) => (
-              <View key={index} style={styles.featureItem}>
-                <CheckCircle size={20} color={selectedInsurance.color} />
-                <Text style={styles.featureText}>{feature}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-      )}
 
-      <View style={styles.customerTypeSection}>
-        <Text style={styles.sectionTitle}>{t('customerType')}</Text>
-        <View style={styles.customerTypeSelector}>
-          <TouchableOpacity
-            style={[
-              styles.customerTypeCard,
-              customerType === 'private' && styles.selectedCustomerTypeCard,
-            ]}
-            onPress={() => setCustomerType('private')}
-          >
-            <User size={24} color={customerType === 'private' ? '#1E40AF' : '#6B7280'} />
-            <Text style={[
-              styles.customerTypeTitle,
-              customerType === 'private' && styles.selectedCustomerTypeTitle,
-            ]}>
-              {t('privateCustomer')}
-            </Text>
-            <Text style={styles.customerTypeSubtitle}>
-              {t('privateCustomerDescription')}
-            </Text>
-            {customerType === 'private' && (
-              <CheckCircle size={20} color="#1E40AF" style={styles.customerTypeCheck} />
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.customerTypeCard,
-              customerType === 'business' && styles.selectedCustomerTypeCard,
-            ]}
-            onPress={() => setCustomerType('business')}
-          >
-            <Building2 size={24} color={customerType === 'business' ? '#1E40AF' : '#6B7280'} />
-            <Text style={[
-              styles.customerTypeTitle,
-              customerType === 'business' && styles.selectedCustomerTypeTitle,
-            ]}>
-              {t('businessCustomer')}
-            </Text>
-            <Text style={styles.customerTypeSubtitle}>
-              {t('businessCustomerDescription')}
-            </Text>
-            {customerType === 'business' && (
-              <CheckCircle size={20} color="#1E40AF" style={styles.customerTypeCheck} />
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
 
       <View style={styles.formSection}>
         <Text style={styles.sectionTitle}>{t('quickCalculation')}</Text>
@@ -205,43 +147,14 @@ export default function InsuranceScreen() {
             autoCapitalize="characters"
           />
         </View>
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>{t('insurancePeriod')}</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.periodSelector}>
-            {[
-              { key: 'months1', label: '1 month' },
-              { key: 'months3', label: '3 months' },
-              { key: 'months6', label: '6 months' },
-              { key: 'months9', label: '9 months' },
-              { key: 'months12', label: '12 months' },
-            ].map((period) => (
-              <TouchableOpacity
-                key={period.key}
-                style={[
-                  styles.periodButton,
-                  selectedPeriod === period.key && styles.selectedPeriodButton,
-                ]}
-                onPress={() => setSelectedPeriod(period.key as keyof InsuranceCompany['prices'])}
-              >
-                <Text
-                  style={[
-                    styles.periodButtonText,
-                    selectedPeriod === period.key && styles.selectedPeriodButtonText,
-                  ]}
-                >
-                  {period.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={styles.calculateButton}
           onPress={() => {
             if (carNumber && carYear) {
               const companies = calculateInsurancePrices(parseInt(carYear), carNumber, selectedPeriod);
               setCalculatedCompanies(companies);
-              setShowCompanies(true);
+              setShowCompaniesDropdown(true);
             }
           }}
         >
@@ -250,51 +163,246 @@ export default function InsuranceScreen() {
         </TouchableOpacity>
       </View>
 
-      {showCompanies && calculatedCompanies.length > 0 && (
-        <View style={styles.companiesSection}>
-          <Text style={styles.sectionTitle}>{t('insuranceOffers')}</Text>
-          <Text style={styles.companiesSubtitle}>
-            {t('sortedByPrice')} • {selectedPeriod.replace('months', '')} {selectedPeriod === 'months1' ? 'month' : 'months'}
-          </Text>
-          {calculatedCompanies.map((company, index) => (
-            <View key={company.id} style={styles.companyCard}>
-              {company.isBestOffer && (
-                <View style={styles.bestOfferBadge}>
-                  <Star size={16} color="#fff" fill="#fff" />
-                  <Text style={styles.bestOfferText}>{t('bestOffer')}</Text>
-                </View>
-              )}
-              <View style={styles.companyHeader}>
-                <View style={styles.companyInfo}>
-                  <Text style={styles.companyName}>{company.name}</Text>
-                  <View style={styles.companyFeatures}>
-                    {company.features.slice(0, 2).map((feature, idx) => (
-                      <Text key={idx} style={styles.featureTag}>{feature}</Text>
-                    ))}
-                  </View>
-                </View>
-                <Image 
-                  source={{ uri: company.logo }} 
-                  style={styles.companyLogo}
-                  resizeMode="contain"
-                />
-                <View style={styles.priceSection}>
-                  <Text style={styles.price}>€{company.prices[selectedPeriod]}</Text>
-                  <Text style={styles.priceLabel}>
-                    {selectedPeriod === 'months1' ? 'per month' : `for ${selectedPeriod.replace('months', '')} months`}
-                  </Text>
-                </View>
-              </View>
-              <TouchableOpacity 
-                style={[styles.selectButton, { backgroundColor: company.color }]}
-                onPress={() => router.push(`/quote/${company.id}?customerType=${customerType}&carNumber=${carNumber}&carYear=${carYear}&period=${selectedPeriod}`)}
+
+
+      {/* Companies Dropdown Modal */}
+      <Modal
+        visible={showCompaniesDropdown}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowCompaniesDropdown(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t('insuranceOffers')}</Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setShowCompaniesDropdown(false)}
               >
-                <Text style={styles.selectButtonText}>{t('selectOffer')}</Text>
+                <X size={24} color="#6B7280" />
               </TouchableOpacity>
             </View>
-          ))}
+
+            <Text style={styles.modalSubtitle}>
+              {t('sortedByPrice')} • {selectedPeriod.replace('months', '')} {selectedPeriod === 'months1' ? 'month' : 'months'}
+            </Text>
+
+            <ScrollView style={styles.companiesTable} showsVerticalScrollIndicator={false}>
+              {/* Table Header */}
+              <View style={styles.tableHeader}>
+                <View style={styles.companyHeaderColumn}>
+                  <Text style={styles.companyHeaderText}>Компании</Text>
+                </View>
+                <View style={styles.periodsContainer}>
+                  <Text style={styles.periodHeaderText}>1 mēn.</Text>
+                  <Text style={styles.periodHeaderText}>3 mēn.</Text>
+                  <Text style={styles.periodHeaderText}>6 mēn.</Text>
+                  <Text style={styles.periodHeaderText}>9 mēn.</Text>
+                  <Text style={styles.periodHeaderText}>12 mēn.</Text>
+                </View>
+                <View style={styles.actionHeaderColumn}>
+                  <Text style={styles.actionHeaderText}>Действия</Text>
+                </View>
+              </View>
+
+              {/* Company Rows */}
+              {calculatedCompanies.map((company, index) => (
+                <View
+                  key={company.id}
+                  style={[
+                    styles.companyRow,
+                    company.isBestOffer && styles.bestOfferRow
+                  ]}
+                >
+                  <View style={styles.companyInfoSection}>
+                    <Image
+                      source={{ uri: company.logo }}
+                      style={styles.companyLogo}
+                      resizeMode="contain"
+                    />
+                    <View style={styles.companyInfo}>
+                      <Text style={styles.companyName}>{company.name}</Text>
+                      {company.isBestOffer && (
+                        <View style={styles.bestOfferBadge}>
+                          <Star size={10} color="#fff" fill="#fff" />
+                          <Text style={styles.bestOfferText}>{t('bestOffer')}</Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+
+                  <View style={styles.pricesSection}>
+                    <TouchableOpacity
+                      style={[
+                        styles.priceOption,
+                        (selectedCompany?.id === company.id && selectedPeriod === 'months1') && styles.selectedPriceOption,
+                        company.prices.months1 === Math.min(...calculatedCompanies.map(c => c.prices.months1)) && styles.bestPriceOption
+                      ]}
+                      onPress={() => {
+                        setSelectedCompany(company);
+                        setSelectedPeriod('months1');
+                      }}
+                    >
+                      <Text style={[
+                        styles.priceText,
+                        (selectedCompany?.id === company.id && selectedPeriod === 'months1') && styles.selectedPriceText,
+                        company.prices.months1 === Math.min(...calculatedCompanies.map(c => c.prices.months1)) && styles.bestPriceText
+                      ]}>
+                        €{company.prices.months1}
+                      </Text>
+                      {(selectedCompany?.id === company.id && selectedPeriod === 'months1') && <CheckCircle size={14} color="#1E40AF" />}
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.priceOption,
+                        (selectedCompany?.id === company.id && selectedPeriod === 'months3') && styles.selectedPriceOption,
+                        company.prices.months3 === Math.min(...calculatedCompanies.map(c => c.prices.months3)) && styles.bestPriceOption
+                      ]}
+                      onPress={() => {
+                        setSelectedCompany(company);
+                        setSelectedPeriod('months3');
+                      }}
+                    >
+                      <Text style={[
+                        styles.priceText,
+                        (selectedCompany?.id === company.id && selectedPeriod === 'months3') && styles.selectedPriceText,
+                        company.prices.months3 === Math.min(...calculatedCompanies.map(c => c.prices.months3)) && styles.bestPriceText
+                      ]}>
+                        €{company.prices.months3}
+                      </Text>
+                      {(selectedCompany?.id === company.id && selectedPeriod === 'months3') && <CheckCircle size={14} color="#1E40AF" />}
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.priceOption,
+                        (selectedCompany?.id === company.id && selectedPeriod === 'months6') && styles.selectedPriceOption,
+                        company.prices.months6 === Math.min(...calculatedCompanies.map(c => c.prices.months6)) && styles.bestPriceOption
+                      ]}
+                      onPress={() => {
+                        setSelectedCompany(company);
+                        setSelectedPeriod('months6');
+                      }}
+                    >
+                      <Text style={[
+                        styles.priceText,
+                        (selectedCompany?.id === company.id && selectedPeriod === 'months6') && styles.selectedPriceText,
+                        company.prices.months6 === Math.min(...calculatedCompanies.map(c => c.prices.months6)) && styles.bestPriceText
+                      ]}>
+                        €{company.prices.months6}
+                      </Text>
+                      {(selectedCompany?.id === company.id && selectedPeriod === 'months6') && <CheckCircle size={14} color="#1E40AF" />}
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.priceOption,
+                        (selectedCompany?.id === company.id && selectedPeriod === 'months9') && styles.selectedPriceOption,
+                        company.prices.months9 === Math.min(...calculatedCompanies.map(c => c.prices.months9)) && styles.bestPriceOption
+                      ]}
+                      onPress={() => {
+                        setSelectedCompany(company);
+                        setSelectedPeriod('months9');
+                      }}
+                    >
+                      <Text style={[
+                        styles.priceText,
+                        (selectedCompany?.id === company.id && selectedPeriod === 'months9') && styles.selectedPriceText,
+                        company.prices.months9 === Math.min(...calculatedCompanies.map(c => c.prices.months9)) && styles.bestPriceText
+                      ]}>
+                        €{company.prices.months9}
+                      </Text>
+                      {(selectedCompany?.id === company.id && selectedPeriod === 'months9') && <CheckCircle size={14} color="#1E40AF" />}
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.priceOption,
+                        (selectedCompany?.id === company.id && selectedPeriod === 'months12') && styles.selectedPriceOption,
+                        company.prices.months12 === Math.min(...calculatedCompanies.map(c => c.prices.months12)) && styles.bestPriceOption
+                      ]}
+                      onPress={() => {
+                        setSelectedCompany(company);
+                        setSelectedPeriod('months12');
+                      }}
+                    >
+                      <Text style={[
+                        styles.priceText,
+                        (selectedCompany?.id === company.id && selectedPeriod === 'months12') && styles.selectedPriceText,
+                        company.prices.months12 === Math.min(...calculatedCompanies.map(c => c.prices.months12)) && styles.bestPriceText
+                      ]}>
+                        €{company.prices.months12}
+                      </Text>
+                      {(selectedCompany?.id === company.id && selectedPeriod === 'months12') && <CheckCircle size={14} color="#1E40AF" />}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+
+            {/* Customer Type Selector in Modal */}
+            {selectedCompany && (
+              <View style={styles.purchaseSection}>
+                <Text style={styles.purchaseSectionTitle}>Izvēlieties klienta tipu:</Text>
+                <View style={styles.customerTypeSelectorModal}>
+                  <TouchableOpacity
+                    style={[
+                      styles.customerTypeOption,
+                      customerType === 'private' && styles.selectedCustomerTypeOption,
+                    ]}
+                    onPress={() => setCustomerType('private')}
+                  >
+                    <User size={20} color={customerType === 'private' ? '#1E40AF' : '#6B7280'} />
+                    <Text style={[
+                      styles.customerTypeOptionText,
+                      customerType === 'private' && styles.selectedCustomerTypeOptionText,
+                    ]}>
+                      {t('privateCustomer')}
+                    </Text>
+                    {customerType === 'private' && (
+                      <CheckCircle size={16} color="#1E40AF" />
+                    )}
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.customerTypeOption,
+                      customerType === 'business' && styles.selectedCustomerTypeOption,
+                    ]}
+                    onPress={() => setCustomerType('business')}
+                  >
+                    <Building2 size={20} color={customerType === 'business' ? '#1E40AF' : '#6B7280'} />
+                    <Text style={[
+                      styles.customerTypeOptionText,
+                      customerType === 'business' && styles.selectedCustomerTypeOptionText,
+                    ]}>
+                      {t('businessCustomer')}
+                    </Text>
+                    {customerType === 'business' && (
+                      <CheckCircle size={16} color="#1E40AF" />
+                    )}
+                  </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.purchaseButton, { backgroundColor: selectedCompany.color }]}
+                  onPress={() => {
+                    setShowCompaniesDropdown(false);
+                    router.push(`/quote/${selectedCompany.id}?customerType=${customerType}&carNumber=${carNumber}&carYear=${carYear}&period=${selectedPeriod}`);
+                  }}
+                >
+                  <Text style={styles.purchaseButtonText}>
+                    Pirkt OCTA - €{selectedCompany.prices[selectedPeriod]}
+                  </Text>
+                  <ArrowRight size={20} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
         </View>
-      )}
+      </Modal>
 
       <View style={styles.bottomSpacing} />
     </ScrollView>
@@ -484,6 +592,12 @@ const styles = StyleSheet.create({
     top: 10,
     right: 10,
   },
+  stepSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 16,
+    fontWeight: '500',
+  },
   periodSelector: {
     marginBottom: 10,
   },
@@ -508,101 +622,261 @@ const styles = StyleSheet.create({
   selectedPeriodButtonText: {
     color: '#fff',
   },
-  companiesSection: {
-    paddingHorizontal: 20,
-    marginTop: 30,
+
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
   },
-  companiesSubtitle: {
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '70%',
+    minHeight: '50%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  closeButton: {
+    padding: 4,
+  },
+  modalSubtitle: {
     fontSize: 14,
     color: '#6B7280',
-    marginBottom: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
   },
-  companyCard: {
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    padding: 20,
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 2,
-    position: 'relative',
+  companiesTable: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
-  bestOfferBadge: {
-    position: 'absolute',
-    top: -8,
-    right: 20,
-    backgroundColor: '#F59E0B',
+
+  // Table Styles
+  tableHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    zIndex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
   },
-  bestOfferText: {
-    color: '#fff',
+  companyHeaderColumn: {
+    width: 100,
+    paddingRight: 10,
+  },
+  companyHeaderText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  periodsContainer: {
+    flexDirection: 'row',
+    flex: 1,
+    justifyContent: 'space-around',
+    paddingHorizontal: 10,
+  },
+  periodHeaderText: {
     fontSize: 12,
     fontWeight: '600',
-    marginLeft: 4,
+    color: '#6B7280',
+    textAlign: 'center',
+    width: 50,
   },
-  companyHeader: {
+  actionHeaderColumn: {
+    width: 80,
+    alignItems: 'center',
+  },
+  actionHeaderText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  companyRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 15,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  bestOfferRow: {
+    backgroundColor: '#FEF3C7',
+    borderColor: '#F59E0B',
+  },
+  selectedCompanyRow: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#1E40AF',
+  },
+  companyInfoSection: {
+    width: 100,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingRight: 10,
   },
   companyLogo: {
-    width: 50,
-    height: 50,
-    borderRadius: 8,
-    backgroundColor: '#F9FAFB',
-    marginHorizontal: 15,
+    width: 32,
+    height: 32,
+    borderRadius: 6,
+    backgroundColor: '#fff',
+    marginRight: 8,
   },
   companyInfo: {
     flex: 1,
   },
   companyName: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '600',
     color: '#1F2937',
-    marginBottom: 6,
+    marginBottom: 2,
   },
-  companyFeatures: {
+  bestOfferBadge: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  featureTag: {
-    fontSize: 12,
-    color: '#6B7280',
-    backgroundColor: '#F3F4F6',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginRight: 6,
-    marginBottom: 4,
-  },
-  priceSection: {
-    alignItems: 'flex-end',
-  },
-  price: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  priceLabel: {
-    fontSize: 12,
-    color: '#6B7280',
+    alignItems: 'center',
+    backgroundColor: '#F59E0B',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
     marginTop: 2,
+    alignSelf: 'flex-start',
+  },
+  bestOfferText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '600',
+    marginLeft: 2,
+  },
+  pricesSection: {
+    flexDirection: 'row',
+    flex: 1,
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+  },
+  priceText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#1F2937',
+    textAlign: 'center',
+    width: 50,
+  },
+  bestPriceText: {
+    color: '#F59E0B',
+    fontWeight: '700',
+  },
+  priceOption: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    borderRadius: 8,
+    backgroundColor: 'transparent',
+    minHeight: 40,
+    position: 'relative',
+  },
+  selectedPriceOption: {
+    backgroundColor: '#EFF6FF',
+    borderWidth: 2,
+    borderColor: '#1E40AF',
+  },
+  bestPriceOption: {
+    backgroundColor: '#FEF3C7',
+  },
+  selectedPriceText: {
+    color: '#1E40AF',
+    fontWeight: '700',
   },
   selectButton: {
-    paddingVertical: 12,
-    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    minWidth: 80,
     alignItems: 'center',
   },
   selectButtonText: {
     color: '#fff',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  selectedCheckmark: {
+    padding: 4,
+  },
+  purchaseSection: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    backgroundColor: '#fff',
+  },
+  purchaseButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  purchaseButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    marginRight: 8,
+  },
+  purchaseSectionTitle: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  customerTypeSelectorModal: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  customerTypeOption: {
+    flex: 1,
+    backgroundColor: '#F9FAFB',
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 80,
+  },
+  selectedCustomerTypeOption: {
+    borderColor: '#1E40AF',
+    backgroundColor: '#EFF6FF',
+  },
+  customerTypeOptionText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B7280',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  selectedCustomerTypeOptionText: {
+    color: '#1E40AF',
   },
 });

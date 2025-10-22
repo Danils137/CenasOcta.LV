@@ -114,19 +114,25 @@ export async function diagnoseAuth() {
       console.error('❌ User error:', userError.message)
     }
 
-    // Check local storage (web)
+    // Check storage (both web and React Native)
+    const storageKeys = []
     if (typeof window !== 'undefined' && window.localStorage) {
+      // Web browser
       const keys = Object.keys(localStorage).filter(key => key.includes('supabase'))
       console.log('💾 Supabase localStorage keys:', keys)
+      storageKeys.push(...keys)
+    }
 
-      keys.forEach(key => {
-        try {
-          const value = localStorage.getItem(key)
-          console.log(`  ${key}:`, value ? 'Present' : 'Empty')
-        } catch (e) {
-          console.log(`  ${key}: Error accessing`)
-        }
-      })
+    // Check AsyncStorage for React Native (if available)
+    if (typeof AsyncStorage !== 'undefined') {
+      try {
+        const asyncKeys = await AsyncStorage.getAllKeys()
+        const supabaseAsyncKeys = asyncKeys.filter(key => key.includes('supabase') || key.startsWith('sb-'))
+        console.log('💾 Supabase AsyncStorage keys:', supabaseAsyncKeys)
+        storageKeys.push(...supabaseAsyncKeys)
+      } catch (e) {
+        console.log('ℹ️ AsyncStorage not available or error:', e.message)
+      }
     }
 
     return {
@@ -134,7 +140,7 @@ export async function diagnoseAuth() {
       hasUser: !!user,
       sessionError: sessionError?.message,
       userError: userError?.message,
-      localStorageKeys: typeof window !== 'undefined' ? Object.keys(localStorage || {}).filter(key => key.includes('supabase')) : []
+      storageKeys: storageKeys
     }
   } catch (error) {
     console.error('❌ Auth diagnosis error:', error)

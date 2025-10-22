@@ -3,6 +3,59 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../src/lib/supabaseClient';
 import { signIn, signUp, signOut, getCurrentUser } from '../src/lib/authService';
 
+// Утилита для работы с хранилищем (AsyncStorage для RN, localStorage для Web)
+const storage = {
+  async getItem(key: string): Promise<string | null> {
+    if (typeof window === 'undefined') {
+      // React Native
+      return await AsyncStorage.getItem(key);
+    } else {
+      // Web
+      return localStorage.getItem(key);
+    }
+  },
+
+  async setItem(key: string, value: string): Promise<void> {
+    if (typeof window === 'undefined') {
+      // React Native
+      return await AsyncStorage.setItem(key, value);
+    } else {
+      // Web
+      localStorage.setItem(key, value);
+    }
+  },
+
+  async removeItem(key: string): Promise<void> {
+    if (typeof window === 'undefined') {
+      // React Native
+      return await AsyncStorage.removeItem(key);
+    } else {
+      // Web
+      localStorage.removeItem(key);
+    }
+  },
+
+  async getAllKeys(): Promise<string[]> {
+    if (typeof window === 'undefined') {
+      // React Native
+      return await AsyncStorage.getAllKeys();
+    } else {
+      // Web
+      return Object.keys(localStorage) as string[];
+    }
+  },
+
+  async multiRemove(keys: string[]): Promise<void> {
+    if (typeof window === 'undefined') {
+      // React Native
+      return await AsyncStorage.multiRemove(keys);
+    } else {
+      // Web
+      keys.forEach(key => localStorage.removeItem(key));
+    }
+  }
+};
+
 interface User {
   id: string;
   name: string;
@@ -55,20 +108,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             email: session.user.email || ''
           };
 
-          await AsyncStorage.setItem('userData', JSON.stringify(user));
+          await storage.setItem('userData', JSON.stringify(user));
           setUser(user);
         } else if (event === 'SIGNED_OUT') {
           console.log('🚪 User signed out from Supabase - clearing local state');
-          
+
           try {
             // Get all storage keys and remove all Supabase-related keys
-            const allKeys = await AsyncStorage.getAllKeys();
-            const supabaseKeys = allKeys.filter(key => key.startsWith('sb-'));
+            const allKeys = await storage.getAllKeys();
+            const supabaseKeys = allKeys.filter(key => key.startsWith('sb-') || key.includes('supabase'));
             const keysToRemove = [...supabaseKeys, 'userData', 'authToken'];
-            
+
             console.log('🗑️ Removing keys:', keysToRemove);
-            await AsyncStorage.multiRemove(keysToRemove);
-            
+            await storage.multiRemove(keysToRemove);
+
             // Clear user state
             setUser(null);
             console.log('✅ Local state cleared successfully');
@@ -98,11 +151,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           email: currentUser.email || ''
         };
 
-        await AsyncStorage.setItem('userData', JSON.stringify(user));
+        await storage.setItem('userData', JSON.stringify(user));
         setUser(user);
       } else {
-        // Fallback to AsyncStorage for existing users
-        const userData = await AsyncStorage.getItem('userData');
+        // Fallback to storage for existing users
+        const userData = await storage.getItem('userData');
         if (userData) {
           const user = JSON.parse(userData);
           setUser(user);
@@ -129,7 +182,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           email: data.user.email || ''
         };
 
-        await AsyncStorage.setItem('userData', JSON.stringify(user));
+        await storage.setItem('userData', JSON.stringify(user));
         setUser(user);
         return { success: true };
       }
@@ -157,7 +210,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           email: email
         };
 
-        await AsyncStorage.setItem('userData', JSON.stringify(user));
+        await storage.setItem('userData', JSON.stringify(user));
         setUser(user);
         return { success: true };
       }
@@ -193,14 +246,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // This is our fallback to ensure the user is always logged out locally
       try {
         console.log('⚠️ Supabase logout failed, forcing local cleanup...');
-        
-        const allKeys = await AsyncStorage.getAllKeys();
-        const supabaseKeys = allKeys.filter(key => key.startsWith('sb-'));
+
+        const allKeys = await storage.getAllKeys();
+        const supabaseKeys = allKeys.filter(key => key.startsWith('sb-') || key.includes('supabase'));
         const keysToRemove = [...supabaseKeys, 'userData'];
-        
-        await AsyncStorage.multiRemove(keysToRemove);
+
+        await storage.multiRemove(keysToRemove);
         setUser(null);
-        
+
         console.log('✅ Local state forcefully cleared');
       } catch (storageError) {
         console.error('❌ Failed to clear local storage:', storageError);
@@ -208,10 +261,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Helper function to get token from AsyncStorage
+  // Helper function to get token from storage
   const getToken = async (): Promise<string | null> => {
     try {
-      return await AsyncStorage.getItem('authToken');
+      return await storage.getItem('authToken');
     } catch (error) {
       console.error('Error getting token:', error);
       return null;

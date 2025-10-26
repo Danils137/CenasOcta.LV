@@ -1,123 +1,183 @@
-# 🚗 CenasOcta.lv — Auto Insurance Comparison Platform
+# Supabase CLI
 
-CenasOcta.lv is a modern Latvian insurance comparison platform developed by MIĶEĻBAUDAS SIA.
-The platform allows customers to compare OCTA insurance offers, register, manage their policies, and receive cashback for purchases.
+[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=main)](https://coveralls.io/github/supabase/cli?branch=main) [![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/supabase-cli/setup-cli/master?style=flat-square&label=Bitbucket%20Canary)](https://bitbucket.org/supabase-cli/setup-cli/pipelines) [![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/sweatybridge%2Fsetup-cli?label=Gitlab%20Canary)
+](https://gitlab.com/sweatybridge/setup-cli/-/pipelines)
 
-## 🏗️ Project Overview
+[Supabase](https://supabase.io) is an open source Firebase alternative. We're building the features of Firebase using enterprise-grade open source tools.
 
-CenasOcta.lv simplifies the process of finding and purchasing car insurance in Latvia.
-The system integrates multiple insurance providers through APIs, compares offers, and allows users to buy policies directly online.
+This repository contains all the functionality for Supabase CLI.
 
-## 🌐 Core Idea
+- [x] Running Supabase locally
+- [x] Managing database migrations
+- [x] Creating and deploying Supabase Functions
+- [x] Generating types directly from your database schema
+- [x] Making authenticated HTTP requests to [Management API](https://supabase.com/docs/reference/api/introduction)
 
-**"Fast, transparent, and customer-friendly insurance service — with real cashback."**
+## Getting started
 
-## 🧩 Main Features
+### Install the CLI
 
-### 👤 User Portal
+Available via [NPM](https://www.npmjs.com) as dev dependency. To install:
 
-Registered users can:
-
-- View purchase and insurance history
-- Download and store policies, invoices, and receipts
-- Manage personal or company details
-- Track the status of insurance policies (active / expired / pending payment)
-- Receive renewal reminders and notifications
-- Use the built-in cashback system
-- View and download credit notes for refunds
-- Contact support directly from their account
-
-### 🏢 Admin Panel (MIĶEĻBAUDAS SIA)
-
-Administrators can:
-
-- Manage users and their policies
-- View and export SEPA XML files for cashback or refunds
-- Connect and configure insurance company APIs
-- Access transaction logs and analytics
-- Approve or reject cashback requests
-- Manage system-wide settings and content
-
-## ⚙️ Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| **Frontend** | React, Vite, Tailwind, NativeWind |
-| **Backend** | Supabase (PostgreSQL + Auth + Storage) |
-| **Auth** | Supabase Email/Password (JWT) |
-| **Hosting** | Vercel + Supabase Cloud |
-| **Payments** | Montonio API (planned integration) |
-| **Data Exports** | SEPA XML (manual or automated mode) |
-
-## 🗂️ Folder Structure
-
-```
-CenasOcta.lv/
-│
-├── OCTA/                  # Frontend application (React/Vite)
-│   ├── src/
-│   │   ├── components/    # UI components (Forms, Tables, etc.)
-│   │   ├── pages/         # Main pages (Home, Login, Dashboard)
-│   │   ├── lib/           # API and Supabase client
-│   │   ├── assets/        # Images, icons, and styles
-│   │   └── App.jsx
-│   └── package.json
-│
-├── SERVER/                # Backend logic (Node.js, optional API proxy)
-│   ├── routes/
-│   ├── controllers/
-│   ├── services/
-│   ├── index.js
-│   └── package.json
-│
-└── README.md
+```bash
+npm i supabase --save-dev
 ```
 
-## 🔐 Environment Variables
+To install the beta release channel:
 
-Set up the following in your `.env.local` or in Vercel → Project Settings → Environment Variables:
+```bash
+npm i supabase@beta --save-dev
+```
 
-| Name | Description | Example |
-|------|-------------|---------|
-| `EXPO_PUBLIC_SUPABASE_URL` | Supabase API endpoint | `Example` |
-| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Supabase public anon key | `Example` |
-| `VITE_SUPABASE_URL` | (Compatibility variable) | same as above |
-| `VITE_SUPABASE_ANON_KEY` | (Compatibility variable) | same as above |
+When installing with yarn 4, you need to disable experimental fetch with the following nodejs config.
 
-## 🚀 Deployment
+```
+NODE_OPTIONS=--no-experimental-fetch yarn add supabase
+```
 
-### Frontend:
-- Hosted automatically via Vercel
-- Branch → `master` → triggers build & deploy.
+> **Note**
+For Bun versions below v1.0.17, you must add `supabase` as a [trusted dependency](https://bun.sh/guides/install/trusted) before running `bun add -D supabase`.
 
-### Backend (optional):
-- Node.js server hosted on Vercel Functions or external VPS.
+<details>
+  <summary><b>macOS</b></summary>
 
-### Database & Auth:
-- Managed by Supabase Cloud
+  Available via [Homebrew](https://brew.sh). To install:
 
-## 💳 Payments & Cashback Logic
+  ```sh
+  brew install supabase/tap/supabase
+  ```
 
-1. Client purchases insurance directly through the website (via partner APIs)
-2. MIĶEĻBAUDAS SIA issues an invoice and records transaction
-3. Cashback calculated as difference between insurance base price and sale price
-4. Refunds processed automatically or via SEPA XML batch upload to bank
+  To install the beta release channel:
+  
+  ```sh
+  brew install supabase/tap/supabase-beta
+  brew link --overwrite supabase-beta
+  ```
+  
+  To upgrade:
 
-## 📈 Roadmap
+  ```sh
+  brew upgrade supabase
+  ```
+</details>
 
-- ✅ Connect Supabase (Database & Auth)
-- ✅ Deploy on Vercel with custom domain
-- 🟡 Implement login & profile dashboard
-- 🟡 Integrate Montonio for payments
-- 🟡 Add insurance provider APIs
-- ⬜ Launch Beta version for testing
-- ⬜ Integrate admin panel & SEPA exports
-- ⬜ Public launch of cenasocta.lv
+<details>
+  <summary><b>Windows</b></summary>
 
-## 🏢 Company Information
+  Available via [Scoop](https://scoop.sh). To install:
 
-**MIĶEĻBAUDAS SIA**  
-Reg. Nr.: LV40203355985  
-Address: Miķeļbaudas, Olaines novads, Olaines pagasts, Jaunolaine, LV-2127  
-Email: info@cenasocta.lv  
-Website: https://www.cenasocta.lv
+  ```powershell
+  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
+  scoop install supabase
+  ```
+
+  To upgrade:
+
+  ```powershell
+  scoop update supabase
+  ```
+</details>
+
+<details>
+  <summary><b>Linux</b></summary>
+
+  Available via [Homebrew](https://brew.sh) and Linux packages.
+
+  #### via Homebrew
+
+  To install:
+
+  ```sh
+  brew install supabase/tap/supabase
+  ```
+
+  To upgrade:
+
+  ```sh
+  brew upgrade supabase
+  ```
+
+  #### via Linux packages
+
+  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
+
+  ```sh
+  sudo apk add --allow-untrusted <...>.apk
+  ```
+
+  ```sh
+  sudo dpkg -i <...>.deb
+  ```
+
+  ```sh
+  sudo rpm -i <...>.rpm
+  ```
+
+  ```sh
+  sudo pacman -U <...>.pkg.tar.zst
+  ```
+</details>
+
+<details>
+  <summary><b>Other Platforms</b></summary>
+
+  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
+
+  ```sh
+  go install github.com/supabase/cli@latest
+  ```
+
+  Add a symlink to the binary in `$PATH` for easier access:
+
+  ```sh
+  ln -s "$(go env GOPATH)/bin/cli" /usr/bin/supabase
+  ```
+
+  This works on other non-standard Linux distros.
+</details>
+
+<details>
+  <summary><b>Community Maintained Packages</b></summary>
+
+  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
+  To install in your working directory:
+
+  ```bash
+  pkgx install supabase
+  ```
+
+  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
+</details>
+
+### Run the CLI
+
+```bash
+supabase bootstrap
+```
+
+Or using npx:
+
+```bash
+npx supabase bootstrap
+```
+
+The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
+
+## Docs
+
+Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
+
+## Breaking changes
+
+We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
+
+However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
+
+## Developing
+
+To run from source:
+
+```sh
+# Go >= 1.22
+go run . help
+```

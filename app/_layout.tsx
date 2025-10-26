@@ -5,7 +5,6 @@ import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StyleSheet } from "react-native";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import { AuthProvider } from "@/contexts/AuthContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -22,13 +21,13 @@ function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerBackTitle: "Atpakaļ" }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen 
-        name="quote/[companyId]" 
-        options={{ 
+      <Stack.Screen
+        name="quote/[companyId]"
+        options={{
           title: "Piedāvājums",
           headerStyle: { backgroundColor: '#1E40AF' },
           headerTintColor: '#fff'
-        }} 
+        }}
       />
     </Stack>
   );
@@ -41,13 +40,11 @@ export default function AppLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <LanguageProvider>
-          <GestureHandlerRootView style={styles.container}>
-            <RootLayoutNav />
-          </GestureHandlerRootView>
-        </LanguageProvider>
-      </AuthProvider>
+      <LanguageProvider>
+        <GestureHandlerRootView style={styles.container}>
+          <RootLayoutNav />
+        </GestureHandlerRootView>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }

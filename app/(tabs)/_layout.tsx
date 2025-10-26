@@ -4,13 +4,10 @@ import React, { useState } from "react";
 import { TouchableOpacity, StyleSheet, View } from "react-native";
 import { useLanguage } from "@/contexts/LanguageContext";
 import LanguageSelector from "@/components/LanguageSelector";
-import LoginModal from "@/components/LoginModal";
-import UserProfile from "@/components/UserProfile";
 
 export default function MainTabsLayout() {
   const { t } = useLanguage();
   const [showLanguageSelector, setShowLanguageSelector] = useState<boolean>(false);
-  const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
 
   return (
     <>
@@ -27,15 +24,12 @@ export default function MainTabsLayout() {
             fontWeight: '600',
           },
           headerRight: () => (
-            <View style={styles.headerRight}>
-              <UserProfile onShowLoginModal={() => setShowLoginModal(true)} />
-              <TouchableOpacity
-                onPress={() => setShowLanguageSelector(true)}
-                style={styles.languageButton}
-              >
-                <Globe size={24} color="#fff" />
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              onPress={() => setShowLanguageSelector(true)}
+              style={styles.languageButton}
+            >
+              <Globe size={24} color="#fff" />
+            </TouchableOpacity>
           ),
           tabBarStyle: {
             backgroundColor: '#fff',
@@ -87,10 +81,6 @@ export default function MainTabsLayout() {
       <LanguageSelector
         visible={showLanguageSelector}
         onClose={() => setShowLanguageSelector(false)}
-      />
-      <LoginModal
-        visible={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
       />
     </>
   );

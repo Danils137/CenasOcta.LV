@@ -35,3 +35,10 @@ export async function updateUserProfile(updates: { email?: string; password?: st
   const { data, error } = await supabase.auth.updateUser(updates);
   return { user: data.user ?? null, error: error ?? null };
 }
+
+export async function resetPassword(email: string): Promise<{ error: Error | null }> {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/reset-password`,
+  });
+  return { error: error ?? null };
+}

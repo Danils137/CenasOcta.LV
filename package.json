@@ -6,7 +6,6 @@
     "start": "expo start",
     "dev": "expo start --web",
     "web": "expo start --web",
-    "vercel-build": "bash vercel-build.sh",
     "build": "npx expo export --platform web"
   },
   "dependencies": {

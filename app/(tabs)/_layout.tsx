@@ -1,5 +1,5 @@
-import { Tabs } from "expo-router";
-import { Home, Car, Shield, Phone, Info, Globe } from "lucide-react-native";
+import { Tabs, useRouter } from "expo-router";
+import { Home, Car, Shield, Phone, Info, Globe, User } from "lucide-react-native";
 import React, { useState } from "react";
 import { TouchableOpacity, StyleSheet, View } from "react-native";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -7,7 +7,9 @@ import LanguageSelector from "@/components/LanguageSelector";
 
 export default function MainTabsLayout() {
   const { t } = useLanguage();
+  const router = useRouter();
   const [showLanguageSelector, setShowLanguageSelector] = useState<boolean>(false);
+  const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
 
   return (
     <>
@@ -24,12 +26,20 @@ export default function MainTabsLayout() {
             fontWeight: '600',
           },
           headerRight: () => (
-            <TouchableOpacity
-              onPress={() => setShowLanguageSelector(true)}
-              style={styles.languageButton}
-            >
-              <Globe size={24} color="#fff" />
-            </TouchableOpacity>
+            <View style={styles.headerRight}>
+              <TouchableOpacity
+                onPress={() => router.push('/profile')}
+                style={styles.profileButton}
+              >
+                <User size={24} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setShowLanguageSelector(true)}
+                style={styles.languageButton}
+              >
+                <Globe size={24} color="#fff" />
+              </TouchableOpacity>
+            </View>
           ),
           tabBarStyle: {
             backgroundColor: '#fff',
@@ -90,6 +100,9 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  profileButton: {
+    marginRight: 8,
   },
   languageButton: {
     marginLeft: 8,

@@ -155,6 +155,7 @@ export const translations = {
     personalInformation: 'Personīgā informācija',
     provideCompanyDetails: 'Lūdzu, norādiet uzņēmuma datus apdrošināšanas polisei',
     providePersonalDetails: 'Lūdzu, norādiet savus datus apdrošināšanas polisei',
+    quote: 'Piedāvājums',
     
     // Car Types
     sedan: 'Sedans',
@@ -229,8 +230,6 @@ export const translations = {
     legalStatusDesc: 'Mūsu darbība atbilst Latvijas Republikas normatīvajiem aktiem, tai skaitā: Apdrošināšanas un pārapdrošināšanas izplatīšanas likumam (pieņemts 2018. gada 7. jūnijā); Apdrošināšanas līguma likumam; Latvijas Bankas noteikumiem par apdrošināšanas starpnieku darbību. Mēs ievērojam visas prasības, kas noteiktas apdrošināšanas izplatītājiem, tostarp informācijas sniegšanu klientiem, datu aizsardzību un profesionālo godīgumu. Apdrošināšanas starpnieku reģistrs pieejams Latvijas Bankas tīmekļa vietnē.',
     ourResponsibilities: 'Mūsu pienākumi',
     ourResponsibilitiesDesc: 'Kā apdrošināšanas aģentam mums ir pienākums: Darboties godīgi, caurspīdīgi un profesionāli, ievērojot klienta intereses; Sniedz pilnīgu informāciju par apdrošināšanas produktu, tā noteikumiem un ierobežojumiem; Norādīt no kuras apdrošināšanas sabiedrības tiek piedāvāts produkts; Aizsargāt klientu personas datus saskaņā ar GDPR un Latvijas datu aizsardzības likumu; Neizmantot maldinošu vai nepilnīgu informāciju; Saglabāt konfidencialitāti un datu drošību.',
-    clientRightsAndObligations: 'Klienta tiesības un pienākumi',
-    clientFocusDesc: 'Klientam ir tiesības saņemt skaidru informāciju par apdrošināšanas produktu un noteikumiem pirms līguma noslēgšanas. Klientam ir pienākums sniegt patiesus datus un iepazīties ar līguma noteikumiem pirms apmaksas veikšanas.',
     dataProtection: 'Personas datu aizsardzība',
     dataProtectionDesc: 'Visi personas dati tiek apstrādāti saskaņā ar Vispārīgo datu aizsardzības regulu (ES) 2016/679 (GDPR) un Fizisko personu datu apstrādes likumu. Plašāka informācija pieejama sadaļā Privātuma politika.',
     complaintsAndSupervision: 'Sūdzības un uzraudzība',
@@ -250,6 +249,18 @@ export const translations = {
     insurancePolicies: 'Apdrošināšanas polises',
     myDashboard: 'Mans panelis',
     settings: 'Iestatījumi',
+
+    // Authentication
+    signIn: 'Pieslēgties',
+    signUp: 'Reģistrēties',
+    signOut: 'Izrakstīties',
+    email: 'E-pasts',
+    password: 'Parole',
+    confirmPassword: 'Apstiprināt paroli',
+    forgotPassword: 'Aizmirsi paroli?',
+    loginRequired: 'Nepieciešama autorizācija',
+    loginRequiredDesc: 'Lūdzu, piesakieties, lai turpinātu',
+    profile: 'Profils',
 
     // Quote Screen
     selectCoveragePeriod: 'Izvēlieties seguma periodu',
@@ -487,9 +498,6 @@ export const translations = {
     clientFocusDesc: 'The client has the right to receive clear information about the insurance product and terms before concluding the contract. The client is obliged to provide true data and familiarize themselves with the contract terms before making payment.',
     dataProtection: 'Data Protection',
     dataProtectionDesc: 'All personal data is processed in accordance with the General Data Protection Regulation (EU) 2016/679 (GDPR) and the Law on Processing of Personal Data of Natural Persons. More information is available in the Privacy Policy section.',
-    complaintsAndSupervision: 'Complaints and Supervision',
-    complaintsAndSupervisionDesc: 'If you have questions or complaints about the services provided, you can contact us: 📧 info@cenasocta.lv or the Bank of Latvia, which supervises insurance intermediaries: https://www.bank.lv',
-    clientRightsAndObligations: 'Client Rights and Obligations',
     commissionsAndCompensation: 'Commissions and Compensation',
     commissionsAndCompensationDesc: 'For selling insurance services, MIĶEĻBAUDAS SIA receives compensation (commission) from insurance companies with which it has cooperation agreements. This compensation does not affect the final price that the client pays for insurance.',
     transparency: 'Transparency',
@@ -506,7 +514,19 @@ export const translations = {
     myDashboard: 'My Dashboard',
     settings: 'Settings',
 
+    // Authentication
+    signIn: 'Sign In',
+    signUp: 'Sign Up',
+    signOut: 'Sign Out',
+    email: 'Email',
+    password: 'Password',
+    confirmPassword: 'Confirm Password',
+    forgotPassword: 'Forgot Password?',
+    loginRequired: 'Login Required',
+    loginRequiredDesc: 'Please sign in to continue',
+
     // Quote Screen
+    quote: 'Quote',
     selectCoveragePeriod: 'Select Coverage Period',
   },
   
@@ -742,9 +762,6 @@ export const translations = {
     clientFocusDesc: 'Клиент имеет право получить четкую информацию о страховом продукте и условиях до заключения договора. Клиент обязан предоставить правдивые данные и ознакомиться с условиями договора перед осуществлением оплаты.',
     dataProtection: 'Защита данных',
     dataProtectionDesc: 'Все личные данные обрабатываются в соответствии с Общим регламентом по защите данных (ЕС) 2016/679 (GDPR) и Законом об обработке данных физических лиц. Более подробная информация доступна в разделе Политика конфиденциальности.',
-    complaintsAndSupervision: 'Жалобы и надзор',
-    complaintsAndSupervisionDesc: 'Если у вас есть вопросы или жалобы по поводу предоставляемых услуг, вы можете обратиться к нам: 📧 info@cenasocta.lv или в Банк Латвии, который осуществляет надзор за страховыми посредниками: https://www.bank.lv',
-    clientRightsAndObligations: 'Права и обязанности клиента',
     commissionsAndCompensation: 'Комиссии и компенсации',
     commissionsAndCompensationDesc: 'За продажу страховых услуг MIĶEĻBAUDAS SIA получает компенсацию (комиссию) от страховых компаний, с которыми у нее есть договоры о сотрудничестве. Эта компенсация не влияет на конечную цену, которую клиент платит за страхование.',
     transparency: 'Прозрачность',
@@ -761,7 +778,19 @@ export const translations = {
     myDashboard: 'Моя панель',
     settings: 'Настройки',
 
+    // Authentication
+    signIn: 'Войти',
+    signUp: 'Регистрация',
+    signOut: 'Выйти',
+    email: 'Электронная почта',
+    password: 'Пароль',
+    confirmPassword: 'Подтвердить пароль',
+    forgotPassword: 'Забыли пароль?',
+    loginRequired: 'Требуется вход',
+    loginRequiredDesc: 'Пожалуйста, войдите для продолжения',
+
     // Quote Screen
+    quote: 'Предложение',
     selectCoveragePeriod: 'Выберите период покрытия',
   },
 };

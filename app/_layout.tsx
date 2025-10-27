@@ -4,7 +4,8 @@ import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StyleSheet } from "react-native";
-import { LanguageProvider } from "@/contexts/LanguageContext";
+import { LanguageProvider, useLanguage } from "@/contexts/LanguageContext";
+import { AuthProvider } from "@/src/contexts/AuthContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -18,13 +19,39 @@ const queryClient = new QueryClient({
 });
 
 function RootLayoutNav() {
+  const { t } = useLanguage();
+
   return (
     <Stack screenOptions={{ headerBackTitle: "Atpakaļ" }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen
+        name="login"
+        options={{
+          title: t('signIn'),
+          headerStyle: { backgroundColor: '#1E40AF' },
+          headerTintColor: '#fff'
+        }}
+      />
+      <Stack.Screen
         name="quote/[companyId]"
         options={{
-          title: "Piedāvājums",
+          title: t('quote'),
+          headerStyle: { backgroundColor: '#1E40AF' },
+          headerTintColor: '#fff'
+        }}
+      />
+      <Stack.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          headerStyle: { backgroundColor: '#1E40AF' },
+          headerTintColor: '#fff'
+        }}
+      />
+      <Stack.Screen
+        name="settings"
+        options={{
+          title: t('settings'),
           headerStyle: { backgroundColor: '#1E40AF' },
           headerTintColor: '#fff'
         }}
@@ -40,11 +67,13 @@ export default function AppLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <GestureHandlerRootView style={styles.container}>
-          <RootLayoutNav />
-        </GestureHandlerRootView>
-      </LanguageProvider>
+      <AuthProvider>
+        <LanguageProvider>
+          <GestureHandlerRootView style={styles.container}>
+            <RootLayoutNav />
+          </GestureHandlerRootView>
+        </LanguageProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

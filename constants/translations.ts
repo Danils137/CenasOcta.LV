@@ -269,6 +269,10 @@ export const translations = {
     loginRequiredDesc: 'Lūdzu, piesakieties, lai turpinātu',
     profile: 'Profils',
 
+    // Documents
+    standardContract: 'OCTA standarta līgums',
+    viewDocument: 'Skatīt dokumentu',
+
     // Quote Screen
     selectCoveragePeriod: 'Izvēlieties seguma periodu',
   },
@@ -539,6 +543,10 @@ export const translations = {
     loginRequired: 'Login Required',
     loginRequiredDesc: 'Please sign in to continue',
     profile: 'Profile',
+
+    // Documents
+    standardContract: 'OCTA Standard Contract',
+    viewDocument: 'View Document',
 
     // Quote Screen
     quote: 'Quote',
@@ -811,6 +819,10 @@ export const translations = {
     loginRequired: 'Требуется вход',
     loginRequiredDesc: 'Пожалуйста, войдите для продолжения',
     profile: 'Профиль',
+
+    // Documents
+    standardContract: 'Стандартный договор OCTA',
+    viewDocument: 'Просмотреть документ',
 
     // Quote Screen
     quote: 'Предложение',

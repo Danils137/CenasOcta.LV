@@ -43,6 +43,14 @@ export default function HomeScreen() {
               <Car size={48} color="#fff" />
               <Text style={styles.logoText}>{t('companyTitle')}</Text>
             </View>
+            <TouchableOpacity
+              style={styles.documentLink}
+              onPress={() => Linking.openURL('/documents/BALTA_OCTA_standartligums.pdf')}
+            >
+              <Text style={styles.documentLinkText}>
+                📄 {t('standardContract')}
+              </Text>
+            </TouchableOpacity>
             <Text style={styles.headerTitle}>
               {t('companySubtitle')}
             </Text>
@@ -331,6 +339,20 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 16,
     color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
+  },
+  documentLink: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginTop: 12,
+    marginBottom: 12,
+  },
+  documentLinkText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
     textAlign: 'center',
   },
   contentSection: {

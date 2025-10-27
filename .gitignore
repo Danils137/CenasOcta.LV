@@ -13,3 +13,6 @@ expo-env.d.ts
 # Dependencies
 node_modules/
 node_modules
+
+# Vercel
+.vercel

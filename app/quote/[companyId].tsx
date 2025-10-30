@@ -13,16 +13,15 @@ import { Stack, useLocalSearchParams, router } from 'expo-router';
 import {
   ArrowLeft,
   Shield,
-  CreditCard,
   CheckCircle,
   AlertCircle,
   Download,
   Mail,
-  Calendar,
 } from 'lucide-react-native';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { insuranceCompanies, calculateInsurancePrices, InsuranceCompany } from '@/data/insurance-companies';
+import { BankSelector } from '@/components/BankSelector';
 
 type Step = 'quote' | 'personal' | 'payment' | 'confirmation';
 
@@ -45,6 +44,17 @@ interface PaymentInfo {
   cardNumber: string;
   expiryDate: string;
   cvv: string;
+  selectedBank?: {
+    id: string;
+    name: string;
+    logoUrl: string;
+  };
+}
+
+interface Bank {
+  id: string;
+  name: string;
+  logoUrl: string;
 }
 
 export default function QuoteScreen() {
@@ -89,7 +99,7 @@ export default function QuoteScreen() {
     contactPerson: '',
   });
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
-    method: 'card',
+    method: 'bank',
     cardNumber: '',
     expiryDate: '',
     cvv: '',
@@ -145,6 +155,10 @@ export default function QuoteScreen() {
     setPaymentInfo(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleBankSelect = (bank: Bank) => {
+    setPaymentInfo(prev => ({ ...prev, selectedBank: bank }));
+  };
+
   const validatePersonalInfo = (): boolean => {
     if (isCompanyCustomer) {
       const { companyName, companyRegNumber, contactPerson, phone, email } = personalInfo;
@@ -156,11 +170,7 @@ export default function QuoteScreen() {
   };
 
   const validatePaymentInfo = (): boolean => {
-    if (paymentInfo.method === 'bank') return true;
-    if (paymentInfo.method === 'installments') return true;
-    
-    const { cardNumber, expiryDate, cvv } = paymentInfo;
-    return !!(cardNumber && expiryDate && cvv);
+    return !!paymentInfo.selectedBank;
   };
 
   const handleNextStep = () => {
@@ -187,12 +197,62 @@ export default function QuoteScreen() {
 
   const handlePurchase = async () => {
     setIsProcessing(true);
-    
-    // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    
-    setIsProcessing(false);
-    setCurrentStep('confirmation');
+
+    try {
+      if (paymentInfo.method === 'bank' && paymentInfo.selectedBank) {
+        // Create order through Montonio API
+        const supabaseUrl = 'https://mpkjdqwlsgsuddqswsxn.supabase.co';
+        const response = await fetch(`${supabaseUrl}/functions/v1/create-order`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            amount: currentPrice * 100, // Convert to cents
+            currency: 'EUR',
+            description: `${company.name} Insurance (${selectedPeriod.replace('months', '')} ${selectedPeriod === 'months1' ? 'month' : 'months'})`,
+            bankId: paymentInfo.selectedBank.id,
+            customer: isCompanyCustomer ? {
+              companyName: personalInfo.companyName,
+              email: personalInfo.email,
+              phone: personalInfo.phone,
+            } : {
+              firstName: personalInfo.firstName,
+              lastName: personalInfo.lastName,
+              email: personalInfo.email,
+              phone: personalInfo.phone,
+            }
+          })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || 'Failed to create order');
+        }
+
+        if (result.paymentUrl) {
+          // In a real implementation, you would redirect or open the payment URL
+          // For React Native/Expo, you can use Linking.openURL or WebBrowser
+          console.log('Payment URL:', result.paymentUrl);
+          console.log('Order ID:', result.orderId);
+
+          // For demo purposes, show success immediately
+          // In production: Linking.openURL(result.paymentUrl);
+        }
+      }
+
+      // Simulate successful payment or redirect
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      setCurrentStep('confirmation');
+
+    } catch (error) {
+      console.error('Payment error:', error);
+      alert('Payment failed. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const renderQuoteStep = () => (
@@ -409,113 +469,13 @@ export default function QuoteScreen() {
 
   const renderPaymentStep = () => (
     <ScrollView style={styles.stepContainer} showsVerticalScrollIndicator={false}>
-      <Text style={styles.stepTitle}>Payment Method</Text>
-      <Text style={styles.stepSubtitle}>Choose how you&apos;d like to pay for your insurance</Text>
+      <Text style={styles.stepTitle}>Bank Transfer</Text>
+      <Text style={styles.stepSubtitle}>Choose your bank to complete the payment</Text>
 
-      <View style={styles.paymentMethods}>
-        <TouchableOpacity
-          style={[
-            styles.paymentMethod,
-            paymentInfo.method === 'card' && styles.paymentMethodActive
-          ]}
-          onPress={() => handlePaymentInfoChange('method', 'card')}
-        >
-          <CreditCard size={24} color={paymentInfo.method === 'card' ? '#059669' : '#6B7280'} />
-          <Text style={[
-            styles.paymentMethodText,
-            paymentInfo.method === 'card' && styles.paymentMethodTextActive
-          ]}>
-            Credit/Debit Card
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.paymentMethod,
-            paymentInfo.method === 'bank' && styles.paymentMethodActive
-          ]}
-          onPress={() => handlePaymentInfoChange('method', 'bank')}
-        >
-          <Shield size={24} color={paymentInfo.method === 'bank' ? '#059669' : '#6B7280'} />
-          <Text style={[
-            styles.paymentMethodText,
-            paymentInfo.method === 'bank' && styles.paymentMethodTextActive
-          ]}>
-            Bank Transfer
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.paymentMethod,
-            paymentInfo.method === 'installments' && styles.paymentMethodActive
-          ]}
-          onPress={() => handlePaymentInfoChange('method', 'installments')}
-        >
-          <Calendar size={24} color={paymentInfo.method === 'installments' ? '#059669' : '#6B7280'} />
-          <Text style={[
-            styles.paymentMethodText,
-            paymentInfo.method === 'installments' && styles.paymentMethodTextActive
-          ]}>
-            Monthly Installments
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {paymentInfo.method === 'card' && (
-        <View style={styles.cardForm}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Card Number *</Text>
-            <TextInput
-              style={styles.textInput}
-              value={paymentInfo.cardNumber}
-              onChangeText={(value) => handlePaymentInfoChange('cardNumber', value)}
-              placeholder="1234 5678 9012 3456"
-              keyboardType="numeric"
-            />
-          </View>
-
-          <View style={styles.inputRow}>
-            <View style={styles.inputHalf}>
-              <Text style={styles.inputLabel}>Expiry Date *</Text>
-              <TextInput
-                style={styles.textInput}
-                value={paymentInfo.expiryDate}
-                onChangeText={(value) => handlePaymentInfoChange('expiryDate', value)}
-                placeholder="MM/YY"
-                keyboardType="numeric"
-              />
-            </View>
-            <View style={styles.inputHalf}>
-              <Text style={styles.inputLabel}>CVV *</Text>
-              <TextInput
-                style={styles.textInput}
-                value={paymentInfo.cvv}
-                onChangeText={(value) => handlePaymentInfoChange('cvv', value)}
-                placeholder="123"
-                keyboardType="numeric"
-                secureTextEntry
-              />
-            </View>
-          </View>
-        </View>
-      )}
-
-      {paymentInfo.method === 'bank' && (
-        <View style={styles.bankInfo}>
-          <Text style={styles.bankInfoText}>
-            You will receive bank transfer details after confirming your order.
-          </Text>
-        </View>
-      )}
-
-      {paymentInfo.method === 'installments' && (
-        <View style={styles.installmentInfo}>
-          <Text style={styles.installmentInfoText}>
-            Pay €{Math.round(currentPrice / 12 * 100) / 100} per month for 12 months
-          </Text>
-        </View>
-      )}
+      <BankSelector
+        onBankSelect={handleBankSelect}
+        selectedBank={paymentInfo.selectedBank}
+      />
 
       <View style={styles.orderSummary}>
         <Text style={styles.summaryTitle}>Order Summary</Text>
@@ -533,8 +493,8 @@ export default function QuoteScreen() {
         </View>
       </View>
 
-      <TouchableOpacity 
-        style={[styles.nextButton, isProcessing && styles.nextButtonDisabled]} 
+      <TouchableOpacity
+        style={[styles.nextButton, isProcessing && styles.nextButtonDisabled]}
         onPress={handleNextStep}
         disabled={isProcessing}
       >

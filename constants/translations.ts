@@ -155,7 +155,6 @@ export const translations = {
     personalInformation: 'Personīgā informācija',
     provideCompanyDetails: 'Lūdzu, norādiet uzņēmuma datus apdrošināšanas polisei',
     providePersonalDetails: 'Lūdzu, norādiet savus datus apdrošināšanas polisei',
-    quote: 'Piedāvājums',
     
     // Car Types
     sedan: 'Sedans',
@@ -271,6 +270,10 @@ export const translations = {
 
     // Quote Screen
     selectCoveragePeriod: 'Izvēlieties seguma periodu',
+    insurancePeriodDates: 'Apdrošināšanas periods',
+    validFrom: 'Spēkā no',
+    validUntil: 'Spēkā līdz',
+    dateSelectionHint: 'Minimālais apdrošināšanas sākuma datums ir rīt. Jūs varat izvēlēties sākuma datumu nākamo 3 mēnešu laikā.',
   },
   
   en: {
@@ -427,6 +430,7 @@ export const translations = {
     personalInformation: 'Personal Information',
     provideCompanyDetails: 'Please provide your company details for the insurance policy',
     providePersonalDetails: 'Please provide your details for the insurance policy',
+    quote: 'Quote',
     
     // Car Types
     sedan: 'Sedan',
@@ -540,9 +544,12 @@ export const translations = {
     loginRequiredDesc: 'Please sign in to continue',
     profile: 'Profile',
 
-    // Quote Screen
-    quote: 'Quote',
+    // Quote Screen - Date Selection
     selectCoveragePeriod: 'Select Coverage Period',
+    insurancePeriodDates: 'Insurance Period',
+    validFrom: 'Valid from',
+    validUntil: 'Valid until',
+    dateSelectionHint: 'Minimum insurance start date is tomorrow. You can select a start date within the next 3 months.',
   },
   
   ru: {
@@ -699,6 +706,7 @@ export const translations = {
     personalInformation: 'Личная информация',
     provideCompanyDetails: 'Пожалуйста, предоставьте данные вашей компании для страхового полиса',
     providePersonalDetails: 'Пожалуйста, предоставьте ваши данные для страхового полиса',
+    quote: 'Предложение',
     
     // Car Types
     sedan: 'Седан',
@@ -812,9 +820,12 @@ export const translations = {
     loginRequiredDesc: 'Пожалуйста, войдите для продолжения',
     profile: 'Профиль',
 
-    // Quote Screen
-    quote: 'Предложение',
+    // Quote Screen - Date Selection
     selectCoveragePeriod: 'Выберите период покрытия',
+    insurancePeriodDates: 'Период страхования',
+    validFrom: 'Действует с',
+    validUntil: 'Действует до',
+    dateSelectionHint: 'Минимальная дата начала страхования - завтра. Вы можете выбрать дату начала в течение следующих 3 месяцев.',
   },
 };
 

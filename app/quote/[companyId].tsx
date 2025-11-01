@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -6,8 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-
   Image,
+  Platform,
 } from 'react-native';
 import { Stack, useLocalSearchParams, router } from 'expo-router';
 import {
@@ -17,7 +17,9 @@ import {
   AlertCircle,
   Download,
   Mail,
+  Calendar,
 } from 'lucide-react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { insuranceCompanies, calculateInsurancePrices, InsuranceCompany } from '@/data/insurance-companies';
@@ -73,7 +75,50 @@ export default function QuoteScreen() {
       : 'months12')
   );
   const [isCompanyCustomer] = useState<boolean>(customerType === 'business');
+  
+  // Date states
+  const [startDate, setStartDate] = useState<Date>(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    return tomorrow;
+  });
+  const [endDate, setEndDate] = useState<Date>(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
+  // Calculate end date based on start date and period
+  useEffect(() => {
+    const calculateEndDate = () => {
+      const end = new Date(startDate);
+      
+      switch (selectedPeriod) {
+        case 'months1':
+          end.setMonth(end.getMonth() + 1);
+          break;
+        case 'months3':
+          end.setMonth(end.getMonth() + 3);
+          break;
+        case 'months6':
+          end.setMonth(end.getMonth() + 6);
+          break;
+        case 'months9':
+          end.setMonth(end.getMonth() + 9);
+          break;
+        case 'months12':
+          end.setFullYear(end.getFullYear() + 1);
+          break;
+      }
+      
+      // Set to end of previous day
+      end.setDate(end.getDate() - 1);
+      end.setHours(23, 59, 59, 999);
+      
+      setEndDate(end);
+    };
+    
+    calculateEndDate();
+  }, [startDate, selectedPeriod]);
+  
   // Log the received parameters for debugging
   console.log('Quote page params:', {
     companyId,
@@ -131,6 +176,21 @@ export default function QuoteScreen() {
   // Handle period change with price recalculation
   const handlePeriodChange = (newPeriod: keyof InsuranceCompany['prices']) => {
     setSelectedPeriod(newPeriod);
+  };
+
+  const formatDate = (date: Date): string => {
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}.${month}.${year}`;
+  };
+
+  const onDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      selectedDate.setHours(0, 0, 0, 0);
+      setStartDate(selectedDate);
+    }
   };
 
   if (!company) {
@@ -315,6 +375,54 @@ export default function QuoteScreen() {
             </TouchableOpacity>
           ))}
         </View>
+      </View>
+
+      <View style={styles.dateSelector}>
+        <Text style={styles.sectionTitle}>{t('insurancePeriodDates')}</Text>
+        
+        <View style={styles.dateInputsRow}>
+          <View style={styles.dateInputContainer}>
+            <Text style={styles.dateLabel}>{t('validFrom')}</Text>
+            <TouchableOpacity 
+              style={styles.dateInput}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Calendar size={20} color="#059669" />
+              <Text style={styles.dateText}>{formatDate(startDate)}</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.dateInputContainer}>
+            <Text style={styles.dateLabel}>{t('validUntil')}</Text>
+            <View style={styles.dateInput}>
+              <Calendar size={20} color="#6B7280" />
+              <Text style={styles.dateText}>{formatDate(endDate)}</Text>
+            </View>
+          </View>
+        </View>
+
+        {showDatePicker && (
+          <DateTimePicker
+            value={startDate}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={onDateChange}
+            minimumDate={(() => {
+              const tomorrow = new Date();
+              tomorrow.setDate(tomorrow.getDate() + 1);
+              return tomorrow;
+            })()}
+            maximumDate={(() => {
+              const maxDate = new Date();
+              maxDate.setMonth(maxDate.getMonth() + 3);
+              return maxDate;
+            })()}
+          />
+        )}
+
+        <Text style={styles.dateHint}>
+          {t('dateSelectionHint')}
+        </Text>
       </View>
 
       <View style={styles.featuresCard}>
@@ -809,6 +917,45 @@ const styles = StyleSheet.create({
   },
   periodOptionPriceActive: {
     color: '#059669',
+  },
+  
+  // Date Selector
+  dateSelector: {
+    marginBottom: 24,
+  },
+  dateInputsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  dateInputContainer: {
+    flex: 1,
+  },
+  dateLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  dateInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    gap: 8,
+  },
+  dateText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  dateHint: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 12,
+    lineHeight: 18,
   },
   
   // Features Card

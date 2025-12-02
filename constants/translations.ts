@@ -73,8 +73,8 @@ export const translations = {
     kaskoFeature4: 'Tehniskā palīdzība ceļā',
     
     // Calculator Screen
-    safetyDriving: 'Drošā braukšana',
-    safetyDrivingSubtitle: 'Iemācies drošas braukšanas noteikumus un padomus',
+    safetyDriving: 'OCTA apdrošināšana',
+    safetyDrivingSubtitle: 'Detalizēta informācija par OCTA segumu un noteikumiem',
     drivingRules: 'Braukšanas noteikumi',
     safetyTips: 'Drošības padomi',
     trafficSigns: 'Ceļa zīmes',
@@ -348,8 +348,8 @@ export const translations = {
     kaskoFeature4: 'Roadside assistance',
     
     // Calculator Screen
-    safetyDriving: 'Safe Driving',
-    safetyDrivingSubtitle: 'Learn safe driving rules and tips',
+    safetyDriving: 'OCTA Insurance',
+    safetyDrivingSubtitle: 'Detailed information about OCTA coverage, limits, and obligations',
     drivingRules: 'Driving Rules',
     safetyTips: 'Safety Tips',
     trafficSigns: 'Traffic Signs',
@@ -509,6 +509,8 @@ export const translations = {
     clientFocusDesc: 'The client has the right to receive clear information about the insurance product and terms before concluding the contract. The client is obliged to provide true data and familiarize themselves with the contract terms before making payment.',
     dataProtection: 'Data Protection',
     dataProtectionDesc: 'All personal data is processed in accordance with the General Data Protection Regulation (EU) 2016/679 (GDPR) and the Law on Processing of Personal Data of Natural Persons. More information is available in the Privacy Policy section.',
+    complaintsAndSupervision: 'Complaints and supervision',
+    complaintsAndSupervisionDesc: 'If you have questions or complaints about the services provided, you can contact us at info@cenasocta.lv or the Bank of Latvia, which supervises insurance intermediaries: https://www.bank.lv',
     commissionsAndCompensation: 'Commissions and Compensation',
     commissionsAndCompensationDesc: 'For selling insurance services, MIĶEĻBAUDAS SIA receives compensation (commission) from insurance companies with which it has cooperation agreements. This compensation does not affect the final price that the client pays for insurance.',
     transparency: 'Transparency',
@@ -624,8 +626,8 @@ export const translations = {
     kaskoFeature4: 'Техническая помощь на дороге',
     
     // Calculator Screen
-    safetyDriving: 'Безопасное вождение',
-    safetyDrivingSubtitle: 'Изучите правила и советы безопасного вождения',
+    safetyDriving: 'Страхование OCTA',
+    safetyDrivingSubtitle: 'Подробная информация о покрытии OCTA, ограничениях и обязанностях',
     drivingRules: 'Правила вождения',
     safetyTips: 'Советы по безопасности',
     trafficSigns: 'Дорожные знаки',
@@ -769,6 +771,8 @@ export const translations = {
     // About Screen
     aboutTitle: 'CenasOcta.lv',
     aboutSubtitle: 'Ваш надежный партнер в автостраховании',
+    complaintsAndSupervision: 'Жалобы и надзор',
+    complaintsAndSupervisionDesc: 'Если у вас есть вопросы или жалобы на предоставляемые услуги, вы можете обратиться: к нам: 📧 info@cenasocta.lv или в Банк Латвии, который контролирует страховых посредников: https://www.bank.lv',
     satisfiedClients: 'Довольные клиенты',
     yearsExperience: 'Лет опыта',
     clientSatisfaction: 'Удовлетворенность клиентов',

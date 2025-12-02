@@ -16,6 +16,7 @@ Deno.serve(async (req: Request) => {
     // Get secrets from environment
     const ACCESS_KEY = Deno.env.get("MONTONIO_ACCESS_KEY")!;
     const SECRET_KEY = Deno.env.get("MONTONIO_SECRET_KEY")!;
+    const API_BASE = Deno.env.get("MONTONIO_API_BASE_URL") ?? "https://stargate.montonio.com";
 
     if (!ACCESS_KEY || !SECRET_KEY) {
       throw new Error("Montonio credentials not configured")
@@ -29,7 +30,7 @@ Deno.serve(async (req: Request) => {
     });
 
     // Make request to Montonio API
-    const res = await fetch("https://stargate.montonio.com/api/stores/payment-methods", {
+    const res = await fetch(`${API_BASE}/api/stores/payment-methods`, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -52,9 +53,10 @@ Deno.serve(async (req: Request) => {
     });
 
   } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to fetch payment methods';
     console.error('Error:', err);
     return new Response(JSON.stringify({
-      error: err.message,
+      error: message,
       banks: []
     }), {
       status: 500,

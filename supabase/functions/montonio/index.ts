@@ -13,7 +13,7 @@ interface MontonioPayload {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const MONTONIO_SECRET = Deno.env.get("MONTONIO_SECRET") ?? "";
-const MONTONIO_ACCESS_KEY = Deno.env.get("MONTONIO_ACCESS_KEY") ?? "";
+const MAX_RETRIES = 5;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   console.error("Missing Supabase environment variables (SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY).");
@@ -69,6 +69,8 @@ async function insertInvoice(record: {
   amount?: number | null;
   currency?: string | null;
   montonio_payment_id?: string | null;
+  status?: string | null;
+  merchant_reference?: string | null;
 }) {
   const url = `${SUPABASE_URL}/rest/v1/invoices`;
   const res = await fetch(url, {
@@ -89,9 +91,8 @@ async function insertInvoice(record: {
   return json;
 }
 
-// Helper: check duplicate montonio_payment_id
-async function existsMontonioPaymentId(mpid: string): Promise<boolean> {
-  const url = `${SUPABASE_URL}/rest/v1/invoices?montonio_payment_id=eq.${encodeURIComponent(mpid)}&select=id`;
+async function getInvoiceByPaymentId(mpid: string): Promise<any | null> {
+  const url = `${SUPABASE_URL}/rest/v1/invoices?montonio_payment_id=eq.${encodeURIComponent(mpid)}&select=*`;
   const res = await fetch(url, {
     headers: {
       Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
@@ -100,14 +101,95 @@ async function existsMontonioPaymentId(mpid: string): Promise<boolean> {
   });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Supabase query failed: ${res.status} ${text}`);
+    throw new Error(`Supabase fetch failed: ${res.status} ${text}`);
   }
   const json = await res.json();
-  return Array.isArray(json) && json.length > 0;
+  if (Array.isArray(json) && json.length > 0) {
+    return json[0];
+  }
+  return null;
+}
+
+async function updateInvoiceStatus(mpid: string, updates: Record<string, unknown>) {
+  const url = `${SUPABASE_URL}/rest/v1/invoices?montonio_payment_id=eq.${encodeURIComponent(mpid)}`;
+  const res = await fetch(url, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      Prefer: "return=representation",
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+    },
+    body: JSON.stringify(updates),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    console.error(`Supabase invoice update failed: ${res.status} ${text}`);
+    return null;
+  }
+
+  try {
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+async function createWebhookLog(record: Record<string, unknown>) {
+  const url = `${SUPABASE_URL}/rest/v1/webhook_logs`;
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        Prefer: "return=representation",
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+      },
+      body: JSON.stringify(record),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      console.error(`Failed to insert webhook log: ${res.status} ${text}`);
+      return null;
+    }
+    const json = await res.json();
+    if (Array.isArray(json) && json.length > 0) {
+      return json[0];
+    }
+  } catch (error) {
+    console.error("Error creating webhook log:", error);
+  }
+  return null;
+}
+
+async function updateWebhookLog(id: string, updates: Record<string, unknown>) {
+  const url = `${SUPABASE_URL}/rest/v1/webhook_logs?id=eq.${encodeURIComponent(id)}`;
+  try {
+    const res = await fetch(url, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        Prefer: "return=representation",
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+      },
+      body: JSON.stringify(updates),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      console.error(`Failed to update webhook log: ${res.status} ${text}`);
+    }
+  } catch (error) {
+    console.error("Error updating webhook log:", error);
+  }
 }
 
 Deno.serve(async (req: Request) => {
+  let logId: string | undefined;
   try {
+
     // Validate method
     if (req.method !== "POST") {
       return new Response(JSON.stringify({ error: "Method not allowed" }), {
@@ -134,6 +216,11 @@ Deno.serve(async (req: Request) => {
     }
 
     const token = parts[1];
+
+    const headers: Record<string, string> = {};
+    for (const [key, value] of req.headers.entries()) {
+      headers[key] = value;
+    }
 
     // Verify token
     const verified = verifyJwtHs256(token, MONTONIO_SECRET);
@@ -164,53 +251,179 @@ Deno.serve(async (req: Request) => {
     const email = payload.customerEmail ?? payload.email ?? (payload.order && payload.order.customerEmail);
     const merchantReference = payload.merchantReference ?? payload.merchant_reference ?? payload.order?.merchantReference;
 
+    const normalizedStatus = typeof paymentStatus === "string" ? paymentStatus.toLowerCase() : "";
+    const logNotes = [
+      orderId ? `order_id=${orderId}` : null,
+      normalizedStatus ? `montonio_status=${normalizedStatus}` : null,
+      merchantReference ? `merchant_reference=${merchantReference}` : null,
+    ]
+      .filter(Boolean)
+      .join(" | ");
+
+    const logEntry = await createWebhookLog({
+      raw_body: payload,
+      headers,
+      status: "processing",
+      attempts: 1,
+      max_retries: MAX_RETRIES,
+      montonio_payment_id: orderId ?? null,
+      notes: logNotes || null,
+    });
+    logId = logEntry?.id as string | undefined;
+
     if (!orderId) {
+      if (logId) {
+        await updateWebhookLog(logId, {
+          status: "failed",
+          last_error: "Missing order id in payload",
+          processed_at: new Date().toISOString(),
+        });
+      }
       return new Response(JSON.stringify({ error: "Missing order id in payload" }), {
         status: 400,
         headers: { "Content-Type": "application/json" }
       });
     }
 
-    // Only process PAID events
-    if (!paymentStatus || paymentStatus.toString().toLowerCase() !== "paid") {
-      return new Response(JSON.stringify({ message: "Ignored - not a PAID event", status: paymentStatus ?? null }), {
+    const isSuccess = ["paid", "completed", "succeeded"].includes(normalizedStatus);
+    const isFailed = ["failed", "cancelled", "declined", "rejected", "voided", "expired"].includes(normalizedStatus);
+    const isPending = ["pending", "created", "awaiting_payment", "processing"].includes(normalizedStatus);
+
+    if (!paymentStatus) {
+      if (logId) {
+        await updateWebhookLog(logId, {
+          status: "ignored",
+          processed_at: new Date().toISOString(),
+          notes: [logNotes, "ignored:missing_status"].filter(Boolean).join(" | ") || null,
+        });
+      }
+      return new Response(JSON.stringify({ message: "Ignored - missing status", status: null }), {
         status: 200,
         headers: { "Content-Type": "application/json" }
       });
     }
 
-    // Deduplication: check montonio_payment_id
-    const exists = await existsMontonioPaymentId(orderId);
-    if (exists) {
-      // Already processed
-      return new Response(JSON.stringify({ message: "Already processed (duplicate)" }), {
+    if (!isSuccess && !isFailed && !isPending) {
+      if (logId) {
+        await updateWebhookLog(logId, {
+          status: "ignored",
+          processed_at: new Date().toISOString(),
+          notes: [logNotes, `ignored:status=${paymentStatus}`].filter(Boolean).join(" | ") || null,
+        });
+      }
+      return new Response(JSON.stringify({ message: "Ignored - unhandled status", status: paymentStatus }), {
         status: 200,
         headers: { "Content-Type": "application/json" }
       });
     }
 
-    // Prepare record
-    const record = {
-      user_id: null,
-      policy_id: null,
-      email: email ?? null,
-      amount: amount ?? null,
-      currency: currency ?? "EUR",
-      montonio_payment_id: orderId,
-    };
+    const nowIso = new Date().toISOString();
 
-    // Insert invoice (service role)
-    const inserted = await insertInvoice(record);
+    if (isSuccess) {
+      const existingInvoice = await getInvoiceByPaymentId(orderId).catch((error) => {
+        console.error("Failed to fetch invoice by montonio_payment_id:", error);
+        return null;
+      });
 
-    // Optionally run background tasks
-    // EdgeRuntime.waitUntil(asyncTask());
+      if (existingInvoice) {
+        await updateInvoiceStatus(orderId, {
+          status: "paid",
+          paid_at: nowIso,
+        });
+        if (logId) {
+          await updateWebhookLog(logId, {
+            status: "succeeded",
+            processed_at: nowIso,
+          });
+        }
 
-    return new Response(JSON.stringify({ message: "Inserted", invoice: inserted }), {
-      status: 201,
-      headers: { "Content-Type": "application/json" }
+        return new Response(JSON.stringify({ message: "Invoice updated to paid" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      const record = {
+        user_id: null,
+        policy_id: null,
+        email: email ?? null,
+        amount: amount ?? null,
+        currency: currency ?? "EUR",
+        montonio_payment_id: orderId,
+      };
+
+      const inserted = await insertInvoice(record);
+      await updateInvoiceStatus(orderId, {
+        status: "paid",
+        paid_at: nowIso,
+      });
+      if (logId) {
+        await updateWebhookLog(logId, {
+          status: "succeeded",
+          processed_at: nowIso,
+        });
+      }
+
+      return new Response(JSON.stringify({ message: "Inserted", invoice: inserted }), {
+        status: 201,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+
+    if (isFailed) {
+      const updates: Record<string, unknown> = {
+        status: "failed",
+      };
+      await updateInvoiceStatus(orderId, updates);
+      if (logId) {
+        await updateWebhookLog(logId, {
+          status: "failed",
+          processed_at: nowIso,
+          notes: [logNotes, `failure:${paymentStatus}`].filter(Boolean).join(" | ") || null,
+        });
+      }
+      return new Response(JSON.stringify({ message: "Failure acknowledged", status: paymentStatus }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (isPending) {
+      await updateInvoiceStatus(orderId, {
+        status: "pending",
+      });
+      if (logId) {
+        await updateWebhookLog(logId, {
+          status: "pending",
+          processed_at: nowIso,
+        });
+      }
+      return new Response(JSON.stringify({ message: "Pending status recorded", status: paymentStatus }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (logId) {
+      await updateWebhookLog(logId, {
+        status: "ignored",
+        processed_at: nowIso,
+      });
+    }
+
+    return new Response(JSON.stringify({ message: "Unhandled status", status: paymentStatus }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
     });
   } catch (err) {
     console.error("Webhook handler error:", err);
+    if (logId) {
+      await updateWebhookLog(logId, {
+        status: "failed",
+        processed_at: new Date().toISOString(),
+        last_error: err instanceof Error ? err.message : String(err),
+      });
+    }
     return new Response(JSON.stringify({ error: "Internal server error", details: String(err) }), {
       status: 500,
       headers: { "Content-Type": "application/json" }

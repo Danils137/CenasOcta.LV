@@ -20,6 +20,8 @@ interface BankSelectorProps {
   selectedBank?: Bank;
 }
 
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
+
 export function BankSelector({ onBankSelect, selectedBank }: BankSelectorProps) {
   const [banks, setBanks] = useState<Bank[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,8 +36,11 @@ export function BankSelector({ onBankSelect, selectedBank }: BankSelectorProps) 
       setLoading(true);
       setError(null);
 
-      const supabaseUrl = 'https://mpkjdqwlsgsuddqswsxn.supabase.co';
-      const response = await fetch(`${supabaseUrl}/functions/v1/get-payment-methods`);
+      if (!SUPABASE_URL) {
+        throw new Error('Supabase URL is not configured');
+      }
+
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/get-payment-methods`);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch banks: ${response.status}`);
@@ -49,8 +54,9 @@ export function BankSelector({ onBankSelect, selectedBank }: BankSelectorProps) 
 
       setBanks(data.banks || []);
     } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load banks';
       console.error('Error fetching banks:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load banks');
+      setError(message);
 
       // Fallback: show some demo banks for development
       setBanks([

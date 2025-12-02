@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -19,7 +19,8 @@ import {
   Mail,
   Calendar,
 } from 'lucide-react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import * as WebBrowser from 'expo-web-browser';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { insuranceCompanies, calculateInsurancePrices, InsuranceCompany } from '@/data/insurance-companies';
@@ -85,6 +86,19 @@ export default function QuoteScreen() {
   });
   const [endDate, setEndDate] = useState<Date>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const minStartDate = (() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    return tomorrow;
+  })();
+  const maxStartDate = (() => {
+    const maxDate = new Date();
+    maxDate.setMonth(maxDate.getMonth() + 3);
+    maxDate.setHours(0, 0, 0, 0);
+    return maxDate;
+  })();
+  const webDateInputRef = useRef<any>(null);
 
   // Calculate end date based on start date and period
   useEffect(() => {
@@ -150,6 +164,7 @@ export default function QuoteScreen() {
     cvv: '',
   });
   const [isProcessing, setIsProcessing] = useState(false);
+  const [orderId, setOrderId] = useState<string | null>(null);
 
   // Get calculated companies with proper pricing
   const calculatedCompanies = calculateInsurancePrices(
@@ -185,11 +200,67 @@ export default function QuoteScreen() {
     return `${day}.${month}.${year}`;
   };
 
-  const onDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(Platform.OS === 'ios');
+  const formatDateForInput = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const handleWebDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    if (!value) return;
+
+    const parsed = new Date(`${value}T00:00:00`);
+    if (Number.isNaN(parsed.getTime())) return;
+
+    const limitedTime = Math.min(
+      Math.max(parsed.getTime(), minStartDate.getTime()),
+      maxStartDate.getTime()
+    );
+
+    const sanitized = new Date(limitedTime);
+    sanitized.setHours(0, 0, 0, 0);
+    setStartDate(sanitized);
+    webDateInputRef.current?.blur();
+  };
+
+  const handleDateFieldPress = () => {
+    if (Platform.OS === 'web') {
+      const input = webDateInputRef.current;
+      if (input) {
+        input.focus();
+        // showPicker is currently available in Chromium-based browsers
+        (input as any).showPicker?.();
+      }
+      return;
+    }
+
+    setShowDatePicker((prev) => !prev);
+  };
+
+  const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (event.type === 'dismissed') {
+      if (Platform.OS !== 'ios') {
+        setShowDatePicker(false);
+      }
+      return;
+    }
+
     if (selectedDate) {
-      selectedDate.setHours(0, 0, 0, 0);
-      setStartDate(selectedDate);
+      const normalizedDate = new Date(selectedDate);
+      normalizedDate.setHours(0, 0, 0, 0);
+      const limitedTime = Math.min(
+        Math.max(normalizedDate.getTime(), minStartDate.getTime()),
+        maxStartDate.getTime()
+      );
+      const sanitized = new Date(limitedTime);
+      sanitized.setHours(0, 0, 0, 0);
+      setStartDate(sanitized);
+    }
+
+    if (Platform.OS !== 'ios') {
+      setShowDatePicker(false);
     }
   };
 
@@ -256,60 +327,91 @@ export default function QuoteScreen() {
   };
 
   const handlePurchase = async () => {
+    if (!company) {
+      alert('Insurance company not found. Please go back and retry.');
+      return;
+    }
+
+    if (paymentInfo.method !== 'bank') {
+      alert('Only bank payments are supported at the moment.');
+      return;
+    }
+
+    if (!paymentInfo.selectedBank) {
+      alert('Please select a bank to continue.');
+      return;
+    }
+
+    const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+    if (!supabaseUrl) {
+      alert('Supabase URL is not configured. Please contact support.');
+      return;
+    }
+
+    setOrderId(null);
     setIsProcessing(true);
 
     try {
-      if (paymentInfo.method === 'bank' && paymentInfo.selectedBank) {
-        // Create order through Montonio API
-        const supabaseUrl = 'https://mpkjdqwlsgsuddqswsxn.supabase.co';
-        const response = await fetch(`${supabaseUrl}/functions/v1/create-order`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            amount: currentPrice * 100, // Convert to cents
-            currency: 'EUR',
-            description: `${company.name} Insurance (${selectedPeriod.replace('months', '')} ${selectedPeriod === 'months1' ? 'month' : 'months'})`,
-            bankId: paymentInfo.selectedBank.id,
-            customer: isCompanyCustomer ? {
-              companyName: personalInfo.companyName,
-              email: personalInfo.email,
-              phone: personalInfo.phone,
-            } : {
-              firstName: personalInfo.firstName,
-              lastName: personalInfo.lastName,
-              email: personalInfo.email,
-              phone: personalInfo.phone,
-            }
-          })
-        });
+      const response = await fetch(`${supabaseUrl}/functions/v1/create-order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: Math.round(currentPrice * 100),
+          currency: 'EUR',
+          description: `${company.name} Insurance (${selectedPeriod.replace('months', '')} ${selectedPeriod === 'months1' ? 'month' : 'months'})`,
+          bankId: paymentInfo.selectedBank.id,
+          customer: isCompanyCustomer
+            ? {
+                companyName: personalInfo.companyName,
+                email: personalInfo.email,
+                phone: personalInfo.phone,
+              }
+            : {
+                firstName: personalInfo.firstName,
+                lastName: personalInfo.lastName,
+                email: personalInfo.email,
+                phone: personalInfo.phone,
+              },
+        }),
+      });
 
-        const result = await response.json();
+      const result = await response.json();
 
-        if (!response.ok || !result.success) {
-          throw new Error(result.error || 'Failed to create order');
-        }
-
-        if (result.paymentUrl) {
-          // In a real implementation, you would redirect or open the payment URL
-          // For React Native/Expo, you can use Linking.openURL or WebBrowser
-          console.log('Payment URL:', result.paymentUrl);
-          console.log('Order ID:', result.orderId);
-
-          // For demo purposes, show success immediately
-          // In production: Linking.openURL(result.paymentUrl);
-        }
+      if (!response.ok || !result.success || !result.paymentUrl) {
+        throw new Error(result.error || 'Failed to create Montonio order');
       }
 
-      // Simulate successful payment or redirect
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const resolvedOrderId =
+        typeof result.orderId === 'string'
+          ? result.orderId
+          : typeof result.order?.merchantReference === 'string'
+            ? result.order.merchantReference
+            : null;
+
+      setOrderId(resolvedOrderId);
+
+      if (Platform.OS === 'web') {
+        if (typeof window !== 'undefined') {
+          window.location.href = result.paymentUrl as string;
+        }
+        return;
+      }
+
+      const browserResult = await WebBrowser.openBrowserAsync(result.paymentUrl);
+
+      if (browserResult.type === WebBrowser.WebBrowserResultType.CANCEL) {
+        console.log('User closed payment window before completion.');
+        setOrderId(null);
+        return;
+      }
 
       setCurrentStep('confirmation');
-
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Payment failed. Please try again.';
       console.error('Payment error:', error);
-      alert('Payment failed. Please try again.');
+      alert(message);
     } finally {
       setIsProcessing(false);
     }
@@ -385,11 +487,29 @@ export default function QuoteScreen() {
             <Text style={styles.dateLabel}>{t('validFrom')}</Text>
             <TouchableOpacity 
               style={styles.dateInput}
-              onPress={() => setShowDatePicker(true)}
+              onPress={handleDateFieldPress}
             >
               <Calendar size={20} color="#059669" />
               <Text style={styles.dateText}>{formatDate(startDate)}</Text>
             </TouchableOpacity>
+            {Platform.OS === 'web' && (
+              <input
+                ref={webDateInputRef}
+                type="date"
+                value={formatDateForInput(startDate)}
+                min={formatDateForInput(minStartDate)}
+                max={formatDateForInput(maxStartDate)}
+                onChange={handleWebDateChange}
+                style={{
+                  position: 'absolute',
+                  opacity: 0,
+                  width: 0,
+                  height: 0,
+                }}
+                tabIndex={-1}
+                aria-hidden="true"
+              />
+            )}
           </View>
 
           <View style={styles.dateInputContainer}>
@@ -407,16 +527,8 @@ export default function QuoteScreen() {
             mode="date"
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             onChange={onDateChange}
-            minimumDate={(() => {
-              const tomorrow = new Date();
-              tomorrow.setDate(tomorrow.getDate() + 1);
-              return tomorrow;
-            })()}
-            maximumDate={(() => {
-              const maxDate = new Date();
-              maxDate.setMonth(maxDate.getMonth() + 3);
-              return maxDate;
-            })()}
+            minimumDate={minStartDate}
+            maximumDate={maxStartDate}
           />
         )}
 
@@ -627,7 +739,7 @@ export default function QuoteScreen() {
         <Text style={styles.policyTitle}>Policy Details</Text>
         <View style={styles.policyRow}>
           <Text style={styles.policyLabel}>Policy Number:</Text>
-          <Text style={styles.policyValue}>POL-{Date.now().toString().slice(-8)}</Text>
+          <Text style={styles.policyValue}>{orderId ?? 'Pending confirmation'}</Text>
         </View>
         <View style={styles.policyRow}>
           <Text style={styles.policyLabel}>Insurance Company:</Text>
@@ -929,6 +1041,7 @@ const styles = StyleSheet.create({
   },
   dateInputContainer: {
     flex: 1,
+    position: 'relative',
   },
   dateLabel: {
     fontSize: 14,

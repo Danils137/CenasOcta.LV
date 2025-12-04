@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useRouter } from 'expo-router';
-import { User, Clock, FileText, Shield, BarChart3, Settings, LogOut } from 'lucide-react-native';
+import { User, Clock, FileText, Shield, BarChart3, Settings, LogOut, Building2 } from 'lucide-react-native';
 import { LoginScreen } from '@/src/screens/LoginScreen';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -25,6 +25,7 @@ export default function ProfileScreen() {
     { icon: FileText, label: t('invoices'), onPress: () => {} },
     { icon: Shield, label: t('insurancePolicies'), onPress: () => {} },
     { icon: BarChart3, label: t('myDashboard'), onPress: () => {} },
+    { icon: Building2, label: t('myCompanies'), onPress: () => router.push('/companies') },
     { icon: Settings, label: t('settings'), onPress: () => router.push('/settings') },
   ];
 

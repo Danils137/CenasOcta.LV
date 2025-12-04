@@ -57,6 +57,14 @@ function RootLayoutNav() {
           headerTintColor: '#fff'
         }}
       />
+      <Stack.Screen
+        name="companies"
+        options={{
+          title: t('myCompanies'),
+          headerStyle: { backgroundColor: '#1E40AF' },
+          headerTintColor: '#fff'
+        }}
+      />
     </Stack>
   );
 }

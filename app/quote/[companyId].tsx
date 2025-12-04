@@ -8,6 +8,7 @@ import {
   TextInput,
   Image,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { Stack, useLocalSearchParams, router } from 'expo-router';
 import {
@@ -25,6 +26,8 @@ import * as WebBrowser from 'expo-web-browser';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { insuranceCompanies, calculateInsurancePrices, InsuranceCompany } from '@/data/insurance-companies';
 import { BankSelector } from '@/components/BankSelector';
+import { useAuth } from '@/src/contexts/AuthContext';
+import { listUserCompanies, UserCompany } from '@/src/lib/companyService';
 
 type Step = 'quote' | 'personal' | 'payment' | 'confirmation';
 
@@ -69,6 +72,7 @@ export default function QuoteScreen() {
     period?: string;
   }>();
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState<Step>('quote');
   const [selectedPeriod, setSelectedPeriod] = useState<keyof InsuranceCompany['prices']>(
     (period && ['months1', 'months3', 'months6', 'months9', 'months12'].includes(period)
@@ -132,6 +136,56 @@ export default function QuoteScreen() {
     
     calculateEndDate();
   }, [startDate, selectedPeriod]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!user || !isCompanyCustomer) {
+      setUserCompanies([]);
+      setSelectedCompanyId(null);
+      return;
+    }
+
+    setIsLoadingCompanies(true);
+    listUserCompanies(user.id)
+      .then((data) => {
+        if (isMounted) {
+          setUserCompanies(data);
+        }
+      })
+      .catch((error) => console.error('Failed to load companies', error))
+      .finally(() => {
+        if (isMounted) {
+          setIsLoadingCompanies(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user, isCompanyCustomer]);
+
+  useEffect(() => {
+    if (!selectedCompanyId) {
+      return;
+    }
+
+    const selected = userCompanies.find((company) => company.id === selectedCompanyId);
+    if (!selected) {
+      return;
+    }
+
+    setPersonalInfo((prev) => ({
+      ...prev,
+      companyName: selected.name || prev.companyName,
+      companyRegNumber: selected.registrationNumber || prev.companyRegNumber,
+      vatNumber: selected.vatNumber || prev.vatNumber,
+      contactPerson: selected.contactPerson || prev.contactPerson,
+      phone: selected.phone || prev.phone,
+      email: selected.email || prev.email,
+      address: selected.address || prev.address,
+    }));
+  }, [selectedCompanyId, userCompanies]);
   
   // Log the received parameters for debugging
   console.log('Quote page params:', {
@@ -165,6 +219,9 @@ export default function QuoteScreen() {
   });
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [userCompanies, setUserCompanies] = useState<UserCompany[]>([]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+  const [isLoadingCompanies, setIsLoadingCompanies] = useState<boolean>(false);
 
   // Get calculated companies with proper pricing
   const calculatedCompanies = calculateInsurancePrices(
@@ -288,6 +345,14 @@ export default function QuoteScreen() {
 
   const handleBankSelect = (bank: Bank) => {
     setPaymentInfo(prev => ({ ...prev, selectedBank: bank }));
+  };
+
+  const handleCompanyProfileSelect = (companyId: string) => {
+    setSelectedCompanyId(prev => (prev === companyId ? null : companyId));
+  };
+
+  const clearCompanySelection = () => {
+    setSelectedCompanyId(null);
   };
 
   const validatePersonalInfo = (): boolean => {
@@ -565,48 +630,103 @@ export default function QuoteScreen() {
         }
       </Text>
 
+      {isCompanyCustomer && user && (
+        <View style={styles.companySelectorCard}>
+          <View style={styles.companySelectorHeader}>
+            <Text style={styles.selectorTitle}>{t('selectCompanyProfile')}</Text>
+            <TouchableOpacity onPress={() => router.push('/companies')}>
+              <Text style={styles.manageLink}>{t('manageCompanies')}</Text>
+            </TouchableOpacity>
+          </View>
+          {isLoadingCompanies ? (
+            <View style={styles.selectorLoader}>
+              <ActivityIndicator color="#1E40AF" />
+            </View>
+          ) : userCompanies.length === 0 ? (
+            <View style={styles.selectorEmpty}>
+              <Text style={styles.selectorEmptyText}>{t('noCompaniesYet')}</Text>
+              <TouchableOpacity style={styles.selectorManageButton} onPress={() => router.push('/companies')}>
+                <Text style={styles.selectorManageButtonText}>{t('addCompany')}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.companyChips}
+            >
+              {userCompanies.map((company) => {
+                const isSelected = company.id === selectedCompanyId;
+                return (
+                  <TouchableOpacity
+                    key={company.id}
+                    style={[styles.companyChip, isSelected && styles.companyChipSelected]}
+                    onPress={() => handleCompanyProfileSelect(company.id)}
+                  >
+                    <Text style={[styles.companyChipText, isSelected && styles.companyChipTextSelected]}>
+                      {company.name}
+                    </Text>
+                    {company.registrationNumber ? (
+                      <Text style={[styles.companyChipMeta, isSelected && styles.companyChipMetaSelected]}>
+                        {company.registrationNumber}
+                      </Text>
+                    ) : null}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          )}
+          {selectedCompanyId ? (
+            <TouchableOpacity style={styles.clearSelectionButton} onPress={clearCompanySelection}>
+              <Text style={styles.clearSelectionText}>{t('clearCompanySelection')}</Text>
+            </TouchableOpacity>
+          ) : null}
+          <Text style={styles.selectorHint}>{t('companySelectionHint')}</Text>
+        </View>
+      )}
+
       <View style={styles.formSection}>
         {isCompanyCustomer ? (
           <>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Company Name *</Text>
+              <Text style={styles.inputLabel}>{t('companyNameLabel')} *</Text>
               <TextInput
                 style={styles.textInput}
                 value={personalInfo.companyName}
                 onChangeText={(value) => handlePersonalInfoChange('companyName', value)}
-                placeholder="Enter company name"
+                placeholder={t('companyNameLabel')}
               />
             </View>
 
             <View style={styles.inputRow}>
               <View style={styles.inputHalf}>
-                <Text style={styles.inputLabel}>Registration Number *</Text>
+                <Text style={styles.inputLabel}>{t('registrationNumberLabel')} *</Text>
                 <TextInput
                   style={styles.textInput}
                   value={personalInfo.companyRegNumber}
                   onChangeText={(value) => handlePersonalInfoChange('companyRegNumber', value)}
-                  placeholder="12345678901"
+                  placeholder={t('registrationNumberLabel')}
                   keyboardType="numeric"
                 />
               </View>
               <View style={styles.inputHalf}>
-                <Text style={styles.inputLabel}>VAT Number</Text>
+                <Text style={styles.inputLabel}>{t('vatNumberLabel')}</Text>
                 <TextInput
                   style={styles.textInput}
                   value={personalInfo.vatNumber}
                   onChangeText={(value) => handlePersonalInfoChange('vatNumber', value)}
-                  placeholder="LV12345678901"
+                  placeholder={t('vatNumberLabel')}
                 />
               </View>
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Contact Person *</Text>
+              <Text style={styles.inputLabel}>{t('contactPersonLabel')} *</Text>
               <TextInput
                 style={styles.textInput}
                 value={personalInfo.contactPerson}
                 onChangeText={(value) => handlePersonalInfoChange('contactPerson', value)}
-                placeholder="Enter contact person name"
+                placeholder={t('contactPersonLabel')}
               />
             </View>
           </>
@@ -647,35 +767,41 @@ export default function QuoteScreen() {
         )}
 
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Phone Number *</Text>
+          <Text style={styles.inputLabel}>
+            {isCompanyCustomer ? t('companyPhoneLabel') : t('phone')} *
+          </Text>
           <TextInput
             style={styles.textInput}
             value={personalInfo.phone}
             onChangeText={(value) => handlePersonalInfoChange('phone', value)}
-            placeholder="+371 XXXXXXXX"
+            placeholder={isCompanyCustomer ? t('companyPhoneLabel') : t('phone')}
             keyboardType="phone-pad"
           />
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Email Address *</Text>
+          <Text style={styles.inputLabel}>
+            {isCompanyCustomer ? t('companyEmailLabel') : t('email')} *
+          </Text>
           <TextInput
             style={styles.textInput}
             value={personalInfo.email}
             onChangeText={(value) => handlePersonalInfoChange('email', value)}
-            placeholder="your@email.com"
+            placeholder={isCompanyCustomer ? t('companyEmailLabel') : t('email')}
             keyboardType="email-address"
             autoCapitalize="none"
           />
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Address</Text>
+          <Text style={styles.inputLabel}>
+            {isCompanyCustomer ? t('companyAddressLabel') : t('addressLabel')}
+          </Text>
           <TextInput
             style={styles.textInput}
             value={personalInfo.address}
             onChangeText={(value) => handlePersonalInfoChange('address', value)}
-            placeholder={isCompanyCustomer ? "Enter company address" : "Enter your address"}
+            placeholder={isCompanyCustomer ? t('companyAddressLabel') : t('addressLabel')}
             multiline
           />
         </View>
@@ -1092,6 +1218,100 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1F2937',
     marginLeft: 12,
+  },
+  companySelectorCard: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 16,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  companySelectorHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  selectorTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  manageLink: {
+    color: '#1E40AF',
+    fontWeight: '600',
+  },
+  selectorLoader: {
+    paddingVertical: 16,
+  },
+  selectorEmpty: {
+    alignItems: 'flex-start',
+    gap: 8,
+    paddingVertical: 8,
+  },
+  selectorEmptyText: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  selectorManageButton: {
+    backgroundColor: '#1E40AF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
+  selectorManageButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  companyChips: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingVertical: 8,
+  },
+  companyChip: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    minWidth: 140,
+    backgroundColor: '#F9FAFB',
+  },
+  companyChipSelected: {
+    borderColor: '#1E40AF',
+    backgroundColor: '#EEF2FF',
+  },
+  companyChipText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  companyChipTextSelected: {
+    color: '#1E40AF',
+  },
+  companyChipMeta: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 4,
+  },
+  companyChipMetaSelected: {
+    color: '#1E40AF',
+  },
+  clearSelectionButton: {
+    marginTop: 8,
+  },
+  clearSelectionText: {
+    color: '#1E40AF',
+    fontWeight: '600',
+  },
+  selectorHint: {
+    marginTop: 8,
+    fontSize: 13,
+    color: '#6B7280',
   },
   
   // Form Section

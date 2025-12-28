@@ -22,14 +22,28 @@ interface BankSelectorProps {
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 
+// Функция для получения инициалов банка
+const getBankInitials = (bankName: string): string => {
+  const words = bankName.trim().split(' ');
+  if (words.length === 1) {
+    return bankName.substring(0, 2).toUpperCase();
+  }
+  return (words[0][0] + words[1][0]).toUpperCase();
+};
+
 export function BankSelector({ onBankSelect, selectedBank }: BankSelectorProps) {
   const [banks, setBanks] = useState<Bank[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchBanks();
   }, []);
+
+  const handleImageError = (bankId: string) => {
+    setImageErrors(prev => new Set(prev).add(bankId));
+  };
 
   const fetchBanks = async () => {
     try {
@@ -58,22 +72,22 @@ export function BankSelector({ onBankSelect, selectedBank }: BankSelectorProps) 
       console.error('Error fetching banks:', err);
       setError(message);
 
-      // Fallback: show some demo banks for development
+      // Fallback: показываем демо-банки с инициалами (без внешних URL)
       setBanks([
         {
           id: 'swedbank',
           name: 'Swedbank',
-          logoUrl: 'https://example.com/swedbank-logo.png'
+          logoUrl: '' // Пустой URL, чтобы использовать инициалы
         },
         {
           id: 'seb',
           name: 'SEB',
-          logoUrl: 'https://example.com/seb-logo.png'
+          logoUrl: ''
         },
         {
           id: 'lhv',
           name: 'LHV',
-          logoUrl: 'https://example.com/lhv-logo.png'
+          logoUrl: ''
         }
       ]);
 
@@ -122,15 +136,20 @@ export function BankSelector({ onBankSelect, selectedBank }: BankSelectorProps) 
             onPress={() => onBankSelect(bank)}
           >
             <View style={styles.bankInfo}>
-              <Image
-                source={{ uri: bank.logoUrl }}
-                style={styles.bankLogo}
-                resizeMode="contain"
-                onError={() => {
-                  // Fallback for broken images - show first letter of bank name
-                  console.log(`Failed to load image for ${bank.name}`);
-                }}
-              />
+              {bank.logoUrl && !imageErrors.has(bank.id) ? (
+                <Image
+                  source={{ uri: bank.logoUrl }}
+                  style={styles.bankLogo}
+                  resizeMode="contain"
+                  onError={() => handleImageError(bank.id)}
+                />
+              ) : (
+                <View style={styles.bankInitials}>
+                  <Text style={styles.bankInitialsText}>
+                    {getBankInitials(bank.name)}
+                  </Text>
+                </View>
+              )}
               <Text style={[
                 styles.bankName,
                 selectedBank?.id === bank.id && styles.bankNameSelected
@@ -239,6 +258,20 @@ const styles = StyleSheet.create({
     height: 32,
     marginRight: 12,
     borderRadius: 4,
+  },
+  bankInitials: {
+    width: 32,
+    height: 32,
+    marginRight: 12,
+    borderRadius: 16,
+    backgroundColor: '#E5E7EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bankInitialsText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#4B5563',
   },
   bankName: {
     fontSize: 16,

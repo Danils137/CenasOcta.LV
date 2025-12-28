@@ -42,13 +42,38 @@ Deno.serve(async (req: Request) => {
     const orderData: OrderRequest = await req.json();
     const { amount, currency, description, bankId, customer } = orderData;
 
-    if (!amount || !currency || !bankId || !description) {
-      throw new Error("Missing required fields: amount, currency, description, bankId");
+    // Улучшенная валидация входных данных
+    if (!amount || amount <= 0) {
+      throw new Error("Invalid amount: must be a positive number");
+    }
+    if (!currency || !/^[A-Z]{3}$/.test(currency)) {
+      throw new Error("Invalid currency: must be a 3-letter currency code (e.g., EUR)");
+    }
+    if (!description || description.trim().length < 3) {
+      throw new Error("Invalid description: must be at least 3 characters long");
+    }
+    if (!bankId || bankId.trim().length < 2) {
+      throw new Error("Invalid bank ID: must be at least 2 characters long");
+    }
+    if (customer?.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) {
+      throw new Error("Invalid email format");
+    }
+    if (customer?.phone && !/^[\d\s\-\+\(\)]{6,}$/.test(customer.phone)) {
+      throw new Error("Invalid phone number format");
     }
 
-    const token = jwt.sign({ accessKey: ACCESS_KEY }, SECRET_KEY, {
+    // Улучшенная безопасность JWT: добавляем merchantReference и timestamp
+    const tokenPayload = {
+      accessKey: ACCESS_KEY,
+      merchantReference: `CENAS-${Date.now()}`,
+      timestamp: Date.now(),
+      bankId: bankId,
+      amount: amount,
+    };
+    
+    const token = jwt.sign(tokenPayload, SECRET_KEY, {
       algorithm: "HS256",
-      expiresIn: "10m",
+      expiresIn: "5m", // Сокращаем время жизни токена для большей безопасности
     });
 
     const merchantReference = `CENAS-${Date.now()}-${Math.random().toString(36).slice(2, 11).toUpperCase()}`;

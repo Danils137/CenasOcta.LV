@@ -27,8 +27,18 @@ export async function signOut(): Promise<{ error: Error | null }> {
   return { error: error ?? null };
 }
 
-export function getCurrentUser(): User | null {
-  return supabase.auth.getUser().then(r => r.data.user).catch(() => null) as unknown as User | null;
+export async function getCurrentUser(): Promise<User | null> {
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) {
+      console.error('Error getting current user:', error);
+      return null;
+    }
+    return data.user ?? null;
+  } catch (error) {
+    console.error('Exception in getCurrentUser:', error);
+    return null;
+  }
 }
 
 export async function updateUserProfile(updates: { email?: string; password?: string; data?: any }): Promise<AuthResult> {
@@ -37,8 +47,18 @@ export async function updateUserProfile(updates: { email?: string; password?: st
 }
 
 export async function resetPassword(email: string): Promise<{ error: Error | null }> {
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/reset-password`,
-  });
-  return { error: error ?? null };
+  try {
+    // Валидация email перед отправкой
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return { error: new Error('Invalid email address') };
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    return { error: error ?? null };
+  } catch (error) {
+    console.error('Error in resetPassword:', error);
+    return { error: error instanceof Error ? error : new Error('Failed to reset password') };
+  }
 }

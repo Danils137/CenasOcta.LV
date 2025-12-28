@@ -1,4 +1,4 @@
-import jwt from "https://esm.sh/jsonwebtoken@9.0.2"
+import jwt from "npm:jsonwebtoken@9.0.2"
 
 Deno.serve(async (req: Request) => {
   // CORS headers

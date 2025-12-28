@@ -19,8 +19,17 @@ const createMockClient = (): SupabaseClient => {
       signUp: async () => ({ data: { user: null }, error: null }),
       signOut: async () => ({ error: null }),
       getUser: async () => ({ data: { user: null }, error: null }),
+      getSession: async () => ({ data: { session: null }, error: null }),
       updateUser: async () => ({ data: { user: null }, error: null }),
       resetPasswordForEmail: async () => ({ error: null }),
+      onAuthStateChange: () => ({
+        data: {
+          subscription: {
+            unsubscribe: () => {},
+          },
+        },
+        error: null,
+      }),
     },
     // Добавьте другие методы по мере необходимости
   } as unknown as SupabaseClient;

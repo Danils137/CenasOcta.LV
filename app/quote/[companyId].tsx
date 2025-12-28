@@ -80,6 +80,29 @@ export default function QuoteScreen() {
       : 'months12')
   );
   const [isCompanyCustomer] = useState<boolean>(customerType === 'business');
+  const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
+    firstName: '',
+    lastName: '',
+    personalCode: '',
+    phone: '',
+    email: '',
+    address: '',
+    companyName: '',
+    companyRegNumber: '',
+    vatNumber: '',
+    contactPerson: '',
+  });
+  const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
+    method: 'bank',
+    cardNumber: '',
+    expiryDate: '',
+    cvv: '',
+  });
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [userCompanies, setUserCompanies] = useState<UserCompany[]>([]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+  const [isLoadingCompanies, setIsLoadingCompanies] = useState<boolean>(false);
   
   // Date states
   const [startDate, setStartDate] = useState<Date>(() => {
@@ -199,29 +222,6 @@ export default function QuoteScreen() {
   
   console.log('Customer type from params:', customerType);
   console.log('Is company customer:', isCompanyCustomer);
-  const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
-    firstName: '',
-    lastName: '',
-    personalCode: '',
-    phone: '',
-    email: '',
-    address: '',
-    companyName: '',
-    companyRegNumber: '',
-    vatNumber: '',
-    contactPerson: '',
-  });
-  const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
-    method: 'bank',
-    cardNumber: '',
-    expiryDate: '',
-    cvv: '',
-  });
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [orderId, setOrderId] = useState<string | null>(null);
-  const [userCompanies, setUserCompanies] = useState<UserCompany[]>([]);
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
-  const [isLoadingCompanies, setIsLoadingCompanies] = useState<boolean>(false);
 
   // Get calculated companies with proper pricing
   const calculatedCompanies = calculateInsurancePrices(

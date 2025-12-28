@@ -17,6 +17,10 @@ Deno.serve(async (req: Request) => {
     const ACCESS_KEY = Deno.env.get("MONTONIO_ACCESS_KEY")!;
     const SECRET_KEY = Deno.env.get("MONTONIO_SECRET_KEY")!;
     const API_BASE = Deno.env.get("MONTONIO_API_BASE_URL") ?? "https://stargate.montonio.com";
+    const DEFAULT_CURRENCY = Deno.env.get("MONTONIO_CURRENCY") ?? "EUR";
+    const DEFAULT_COUNTRY = Deno.env.get("MONTONIO_COUNTRY") ?? "LV";
+    const DEFAULT_LOCALE = Deno.env.get("MONTONIO_LOCALE") ?? "en";
+    const DEFAULT_GRAND_TOTAL = Deno.env.get("MONTONIO_GRAND_TOTAL") ?? "100.00";
 
     if (!ACCESS_KEY || !SECRET_KEY) {
       throw new Error("Montonio credentials not configured")
@@ -30,7 +34,19 @@ Deno.serve(async (req: Request) => {
     });
 
     // Make request to Montonio API
-    const res = await fetch(`${API_BASE}/api/stores/payment-methods`, {
+    const url = new URL(`${API_BASE}/api/stores/payment-methods`);
+    const { searchParams } = new URL(req.url);
+    const amount = searchParams.get("grandTotal") ?? DEFAULT_GRAND_TOTAL;
+    const currency = searchParams.get("currency") ?? DEFAULT_CURRENCY;
+    const country = searchParams.get("country") ?? DEFAULT_COUNTRY;
+    const locale = searchParams.get("locale") ?? DEFAULT_LOCALE;
+
+    url.searchParams.set("grandTotal", String(amount));
+    url.searchParams.set("currency", currency);
+    url.searchParams.set("country", country);
+    url.searchParams.set("locale", locale);
+
+    const res = await fetch(url.toString(), {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -54,7 +70,7 @@ Deno.serve(async (req: Request) => {
 
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to fetch payment methods';
-    console.error('Error:', err);
+    console.error('Error:', message);
     return new Response(JSON.stringify({
       error: message,
       banks: []

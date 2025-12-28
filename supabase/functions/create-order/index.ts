@@ -34,6 +34,8 @@ Deno.serve(async (req: Request) => {
     const RETURN_URL = Deno.env.get("MONTONIO_RETURN_URL") ?? "https://cenasocta.lv/payment/success";
     const NOTIFICATION_URL = Deno.env.get("MONTONIO_NOTIFICATION_URL") ?? "";
     const API_BASE = Deno.env.get("MONTONIO_API_BASE_URL") ?? "https://stargate.montonio.com";
+    const LOCALE = Deno.env.get("MONTONIO_LOCALE") ?? "en";
+    const COUNTRY = Deno.env.get("MONTONIO_COUNTRY") ?? "LV";
 
     if (!ACCESS_KEY || !SECRET_KEY) {
       throw new Error("Montonio credentials not configured");
@@ -81,11 +83,17 @@ Deno.serve(async (req: Request) => {
     const orderPayload = {
       merchantReference,
       returnUrl: RETURN_URL,
+      locale: LOCALE,
       ...(NOTIFICATION_URL ? { notificationUrl: NOTIFICATION_URL } : {}),
       grandTotal: (amount / 100).toFixed(2),
       currency,
       paymentMethod: "bankPayment",
       paymentInitiationProvider: bankId,
+      paymentInitiationOptions: {
+        paymentDescription: `Payment for order ${merchantReference}`,
+        preferredCountry: COUNTRY,
+        preferredLocale: LOCALE,
+      },
       products: [
         {
           name: description,
